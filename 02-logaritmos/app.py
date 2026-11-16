@@ -22,7 +22,7 @@ with st.expander(T["exp_title"], expanded=False):
 # SECCIÓN 1: ANIMACIÓN ESPEJO (EXPONENCIAL VS LOGARITMO)
 # ==========================================
 st.subheader(T["sec1"])
-ruta_html = Path(__file__).parent / "animacion.html"
+ruta_html = Path(__file__).parent / "animacionlog.html"
 html_code = ruta_html.read_text(encoding="utf-8")
 html_code = html_code.replace("__BTN_PAUSE__", T["pause"]).replace("__BTN_PLAY__", T["play"])
 components.html(html_code, height=340)
