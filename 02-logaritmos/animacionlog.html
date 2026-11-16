@@ -6,13 +6,13 @@
   .toolbar { padding: 6px 12px; background: #161b22; border-radius: 8px; margin-bottom: 8px; border: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center; }
   button { background-color: #238636; color: white; border: none; padding: 6px 14px; font-size: 13px; font-weight: 600; border-radius: 6px; cursor: pointer; }
   button.paused { background-color: #d29922; }
-  canvas { display: block; width: 100%; height: 280px; background-color: #0e1117; border-radius: 8px; border: 1px solid #21262d; }
+  canvas { display: block; width: 100%; height: 300px; background-color: #0e1117; border-radius: 8px; border: 1px solid #21262d; }
 </style>
 </head>
 <body>
   <div class="toolbar">
     <button id="pBtn" onclick="togglePlay()">__BTN_PAUSE__</button>
-    <span style="font-size:13px; color:#8b949e;">Real World (×10 each step) vs. Logarithm (+1 step counter)</span>
+    <span style="font-size:13px; color:#8b949e;">Left: Step Staircase (×10 per step) | Right: Resulting Logarithmic Curve</span>
   </div>
   <canvas id="stepCanvas"></canvas>
 
@@ -21,7 +21,7 @@
     const ctx = cv.getContext('2d');
     let playing = true;
     let timer = 0;
-    let step = 0; // De 0 a 6
+    let currentStep = 0; // 0 a 6
 
     function togglePlay() {
       playing = !playing;
@@ -32,7 +32,7 @@
 
     function animate() {
       const w = cv.clientWidth || window.innerWidth || 800;
-      const h = 280;
+      const h = 300;
       if (cv.width !== w || cv.height !== h) {
         cv.width = w;
         cv.height = h;
@@ -41,76 +41,125 @@
 
       if (playing) {
         timer += 1;
-        if (timer % 75 === 0) {
-          step = (step + 1) % 7; // Cicla de 0 a 6 pasos
+        if (timer % 70 === 0) {
+          currentStep = (currentStep + 1) % 7;
         }
       }
 
-      const realValue = Math.pow(10, step);
-      const midX = w / 2;
-
-      // Línea divisoria central
-      ctx.strokeStyle = '#30363d';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(midX, 20);
-      ctx.lineTo(midX, h - 20);
-      ctx.stroke();
+      const midX = w * 0.44;
+      const baseLineY = h - 45;
+      const maxH = 190;
+      const stepH = maxH / 6;
 
       // ==========================================
-      // LADO IZQUIERDO: MUNDO REAL (EXPLOSIÓN ×10)
+      // LADO IZQUIERDO: ESCALERA DE PELDAÑOS JUNTOS
       // ==========================================
-      ctx.fillStyle = '#f85149';
-      ctx.font = 'bold 15px sans-serif';
-      ctx.fillText("1. REAL WORLD (Multiplies ×10)", 30, 35);
+      const stairStartX = 35;
+      const stairTotalW = midX - 65;
+      const stepW = stairTotalW / 6;
 
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 34px monospace';
-      ctx.fillText(realValue.toLocaleString(), 30, 85);
+      ctx.fillStyle = '#c9d1d9';
+      ctx.font = 'bold 14px sans-serif';
+      ctx.fillText("1. Step Counter (Each block = ×10)", stairStartX, 28);
 
-      ctx.fillStyle = '#8b949e';
-      ctx.font = '13px sans-serif';
-      const zerosText = step === 0 ? "Start (1)" : `1 followed by ${step} zero${step > 1 ? 's' : ''}`;
-      ctx.fillText(zerosText, 30, 110);
-
-      // Barra visual que crece exponencialmente
-      const maxBarW = midX - 60;
-      const expBarW = Math.max(6, (realValue / 1000000) * maxBarW);
-      ctx.fillStyle = '#21262d';
-      ctx.fillRect(30, 135, maxBarW, 28);
-      ctx.fillStyle = '#f85149';
-      ctx.fillRect(30, 135, expBarW, 28);
-
-      ctx.fillStyle = '#8b949e';
-      ctx.font = '12px sans-serif';
-      ctx.fillText("Notice how steps 0, 1, 2, 3 look invisible next to 1,000,000!", 30, 185);
-
-      // ==========================================
-      // LADO DERECHO: LOGARITMO (ESCALERA +1)
-      // ==========================================
-      const rx = midX + 30;
-      ctx.fillStyle = '#3fb950';
-      ctx.font = 'bold 15px sans-serif';
-      ctx.fillText("2. LOGARITHM BASE 10 (Counts Steps)", rx, 35);
-
-      ctx.fillStyle = '#3fb950';
-      ctx.font = 'bold 34px monospace';
-      ctx.fillText(`log₁₀ = ${step}`, rx, 85);
-
-      ctx.fillStyle = '#8b949e';
-      ctx.font = '13px sans-serif';
-      ctx.fillText(`Step ${step} of 6 (Calm, linear growth)`, rx, 110);
-
-      // Dibujar 6 escalones iguales iluminados según el paso
-      const blockW = (maxBarW - 30) / 6;
+      // Dibujar los 6 peldaños pegados formando una escalera real
       for (let i = 1; i <= 6; i++) {
-        ctx.fillStyle = i <= step ? '#3fb950' : '#21262d';
-        ctx.fillRect(rx + (i - 1) * (blockW + 5), 135, blockW, 28);
+        const bx = stairStartX + (i - 1) * stepW;
+        const bh = i * stepH;
+        const by = baseLineY - bh;
+
+        ctx.fillStyle = i <= currentStep ? '#3fb950' : '#161b22';
+        ctx.strokeStyle = '#30363d';
+        ctx.lineWidth = 1;
+        ctx.fillRect(bx, by, stepW, bh);
+        ctx.strokeRect(bx, by, stepW, bh);
+
+        // Número de escalón abajo
+        ctx.fillStyle = i <= currentStep ? '#3fb950' : '#8b949e';
+        ctx.font = '11px monospace';
+        ctx.fillText(`${i}`, bx + stepW / 2 - 4, baseLineY + 16);
       }
 
-      ctx.fillStyle = '#8b949e';
-      ctx.font = '12px sans-serif';
-      ctx.fillText("Every ×10 jump becomes just +1 neat block!", rx, 185);
+      // Etiqueta del valor real actual encima de la escalera
+      const realVal = Math.pow(10, currentStep);
+      ctx.fillStyle = '#f0883e';
+      ctx.font = 'bold 16px monospace';
+      ctx.fillText(`Value: ${realVal.toLocaleString()}  →  Step (log₁₀): ${currentStep}`, stairStartX, baseLineY + 36);
+
+      // ==========================================
+      // LADO DERECHO: GRÁFICA LOGARÍTMICA EN VIVO
+      // ==========================================
+      const gx0 = midX + 45;
+      const gw = w - gx0 - 30;
+
+      ctx.fillStyle = '#c9d1d9';
+      ctx.font = 'bold 14px sans-serif';
+      ctx.fillText("2. Logarithmic Curve (Flattening Giants)", gx0, 28);
+
+      // Ejes de la gráfica derecha
+      ctx.strokeStyle = '#30363d';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(gx0, baseLineY - maxH - 10);
+      ctx.lineTo(gx0, baseLineY);
+      ctx.lineTo(gx0 + gw, baseLineY);
+      ctx.stroke();
+
+      // Líneas guía horizontales para cada escalón (1 a 6)
+      for (let i = 1; i <= 6; i++) {
+        const gy = baseLineY - i * stepH;
+        ctx.save();
+        ctx.strokeStyle = '#21262d';
+        ctx.beginPath();
+        ctx.moveTo(gx0, gy);
+        ctx.lineTo(gx0 + gw, gy);
+        ctx.stroke();
+        ctx.fillStyle = '#8b949e';
+        ctx.font = '10px monospace';
+        ctx.fillText(`${i}`, gx0 - 16, gy + 3);
+        ctx.restore();
+      }
+
+      // Dibujar la curva suave log10(x) hasta el paso actual
+      const maxVal = 1000000;
+      // Usamos una escala visual mixta para mostrar los 6 saltos claramente en la gráfica
+      ctx.strokeStyle = '#58a6ff';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      for (let s = 0; s <= currentStep; s += 0.05) {
+        const px = gx0 + (s / 6) * gw;
+        const py = baseLineY - s * stepH;
+        if (s === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+
+      // Puntos hitos en la gráfica derecha
+      for (let s = 0; s <= currentStep; s++) {
+        const px = gx0 + (s / 6) * gw;
+        const py = baseLineY - s * stepH;
+        ctx.fillStyle = s === currentStep ? '#f0883e' : '#58a6ff';
+        ctx.beginPath();
+        ctx.arc(px, py, s === currentStep ? 6 : 4, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+
+      // Línea conectora desde el escalón actual izquierdo hasta su punto en la gráfica derecha
+      if (currentStep > 0) {
+        const activeStairX = stairStartX + currentStep * stepW;
+        const activeY = baseLineY - currentStep * stepH;
+        const activeGraphX = gx0 + (currentStep / 6) * gw;
+
+        ctx.save();
+        ctx.strokeStyle = '#f0883e';
+        ctx.globalAlpha = 0.65;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(activeStairX, activeY);
+        ctx.lineTo(activeGraphX, activeY);
+        ctx.stroke();
+        ctx.restore();
+      }
 
       requestAnimationFrame(animate);
     }
