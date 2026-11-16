@@ -47,7 +47,11 @@
       ctx.strokeStyle = color;
       ctx.globalAlpha = isHighlighted ? 1.0 : 0.12;
       ctx.lineWidth = isHighlighted ? 3.2 : 1.5;
-      if (isDashed) ctx.setLineDash([5, 5]);
+      if (isDashed) {
+        ctx.setLineDash([6, 4]);
+      } else {
+        ctx.setLineDash([]);
+      }
 
       let drawing = false;
       for (let px = 0; px <= width; px += 2) {
@@ -70,6 +74,8 @@
     }
 
     function drawCircleBase(cx, cy, r) {
+      ctx.save();
+      ctx.setLineDash([]);
       ctx.strokeStyle = '#30363d';
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -84,6 +90,7 @@
       ctx.beginPath();
       ctx.arc(cx, cy, r, 0, 2 * Math.PI);
       ctx.stroke();
+      ctx.restore();
     }
 
     function animate() {
@@ -94,32 +101,28 @@
       const circleX = Math.min(130, w * 0.20);
       const radius = 65;
       
-      // Dos círculos a la izquierda: Superior (Seno/Tan) e Inferior rotado 90° (Coseno)
       const topCircleY = 115;
       const botCircleY = 305;
 
       const waveStartX = circleX + radius + 60;
       const waveWidth = w - waveStartX - 20;
       const waveCenterY = h / 2;
-      const waveScaleY = 65; // Misma escala exacta que el radio para que las líneas rectas coincidan
+      const waveScaleY = 65;
 
       const sinVal = Math.sin(angle);
       const cosVal = Math.cos(angle);
       const tanVal = Math.tan(angle);
 
-      // ==========================================
       // 1. CÍRCULO SUPERIOR: SENO Y TANGENTE
-      // ==========================================
       drawCircleBase(circleX, topCircleY, radius);
       const pxTop = circleX + cosVal * radius;
       const pyTop = topCircleY - sinVal * radius;
 
-      // Pared vertical tangente en el borde derecho del círculo superior
       if (active.tan) {
         ctx.save();
         ctx.strokeStyle = '#f85149';
         ctx.globalAlpha = 0.35;
-        ctx.setLineDash([3, 3]);
+        ctx.setLineDash([4, 4]);
         ctx.beginPath();
         ctx.moveTo(circleX + radius, topCircleY - radius * 2.2);
         ctx.lineTo(circleX + radius, topCircleY + radius * 2.2);
@@ -129,6 +132,7 @@
 
       // Sombra Seno (Vertical Verde)
       ctx.save();
+      ctx.setLineDash([]);
       ctx.strokeStyle = '#3fb950';
       ctx.globalAlpha = active.sin ? 1.0 : 0.2;
       ctx.lineWidth = 4;
@@ -139,27 +143,28 @@
       ctx.restore();
 
       // Radio superior
+      ctx.save();
+      ctx.setLineDash([]);
       ctx.strokeStyle = '#f0883e';
       ctx.lineWidth = 2.5;
       ctx.beginPath();
       ctx.moveTo(circleX, topCircleY);
       ctx.lineTo(pxTop, pyTop);
       ctx.stroke();
+      ctx.restore();
 
       // Proyección de la Tangente en la pared derecha
       if (active.tan && Math.abs(tanVal) <= 2.5) {
         const tanWallY = topCircleY - tanVal * radius;
-        // Línea que extiende el radio hasta la pared tangente
         ctx.save();
         ctx.strokeStyle = '#f0883e';
         ctx.globalAlpha = 0.4;
-        ctx.setLineDash([2, 2]);
+        ctx.setLineDash([4, 4]);
         ctx.beginPath();
         ctx.moveTo(circleX, topCircleY);
         ctx.lineTo(circleX + radius, tanWallY);
         ctx.stroke();
 
-        // Segmento vertical rojo de la Tangente sobre la pared
         ctx.strokeStyle = '#f85149';
         ctx.globalAlpha = 1.0;
         ctx.setLineDash([]);
@@ -171,16 +176,14 @@
         ctx.restore();
       }
 
-      // ==========================================
       // 2. CÍRCULO INFERIOR (ROTADO 90°): COSENO VERTICAL
-      // ==========================================
       drawCircleBase(circleX, botCircleY, radius);
-      // Al rotar el círculo 90°, el eje del Coseno queda vertical
       const pxBot = circleX + sinVal * radius;
       const pyBot = botCircleY - cosVal * radius;
 
-      // Sombra Coseno ahora vertical (Azul)
+      // Sombra Coseno vertical (Azul)
       ctx.save();
+      ctx.setLineDash([]);
       ctx.strokeStyle = '#58a6ff';
       ctx.globalAlpha = active.cos ? 1.0 : 0.2;
       ctx.lineWidth = 4;
@@ -191,17 +194,17 @@
       ctx.restore();
 
       // Radio inferior
+      ctx.save();
+      ctx.setLineDash([]);
       ctx.strokeStyle = '#f0883e';
       ctx.lineWidth = 2.5;
       ctx.beginPath();
       ctx.moveTo(circleX, botCircleY);
       ctx.lineTo(pxBot, pyBot);
       ctx.stroke();
+      ctx.restore();
 
-      // ==========================================
       // 3. ZONA DE ONDAS Y CONECTORES RECTOS
-      // ==========================================
-      // Líneas límite [-1, 1]
       ctx.save();
       ctx.strokeStyle = '#8b949e';
       ctx.globalAlpha = 0.3;
@@ -214,12 +217,14 @@
       ctx.stroke();
       ctx.restore();
 
-      // Eje central de ondas
+      ctx.save();
+      ctx.setLineDash([]);
       ctx.strokeStyle = '#30363d';
       ctx.beginPath();
       ctx.moveTo(waveStartX, waveCenterY);
       ctx.lineTo(w - 20, waveCenterY);
       ctx.stroke();
+      ctx.restore();
 
       const sinWaveY = waveCenterY - sinVal * waveScaleY;
       const cosWaveY = waveCenterY - cosVal * waveScaleY;
@@ -230,7 +235,7 @@
         ctx.save();
         ctx.strokeStyle = '#3fb950';
         ctx.globalAlpha = 0.75;
-        ctx.setLineDash([4, 4]);
+        ctx.setLineDash([5, 5]);
         ctx.beginPath();
         ctx.moveTo(pxTop, pyTop);
         ctx.lineTo(waveStartX, sinWaveY);
@@ -242,12 +247,12 @@
         ctx.restore();
       }
 
-      // Línea conectora recta del COSENO desde el círculo rotado (Azul)
+      // Línea conectora recta del COSENO (Azul)
       if (active.cos) {
         ctx.save();
         ctx.strokeStyle = '#58a6ff';
         ctx.globalAlpha = 0.75;
-        ctx.setLineDash([4, 4]);
+        ctx.setLineDash([5, 5]);
         ctx.beginPath();
         ctx.moveTo(pxBot, pyBot);
         ctx.lineTo(waveStartX, cosWaveY);
@@ -259,13 +264,13 @@
         ctx.restore();
       }
 
-      // Línea conectora recta de la TANGENTE desde la pared derecha (Roja)
+      // Línea conectora recta de la TANGENTE (Roja)
       if (active.tan && Math.abs(tanVal) <= 2.5) {
         const tanWallY = topCircleY - tanVal * radius;
         ctx.save();
         ctx.strokeStyle = '#f85149';
         ctx.globalAlpha = 0.85;
-        ctx.setLineDash([4, 4]);
+        ctx.setLineDash([5, 5]);
         ctx.beginPath();
         ctx.moveTo(circleX + radius, tanWallY);
         ctx.lineTo(waveStartX, tanWaveY);
@@ -290,6 +295,10 @@
       if (isPlaying) {
         angle += 0.022;
       }
-requestAnimationFrame(animate);
-}
-animate();
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+</body>
+</html>
