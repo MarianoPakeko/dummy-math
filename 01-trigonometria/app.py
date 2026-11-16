@@ -29,7 +29,7 @@ active_waves = {
     "cot": c6.toggle(f"🟣 {T['cot']}", value=False),
 }
 
-# Leer el archivo HTML puro e inyectar los estados activos y textos
+# Cargar el archivo HTML limpio e inyectar variables
 ruta_html = Path(__file__).parent / "animacion.html"
 html_code = ruta_html.read_text(encoding="utf-8")
 html_code = html_code.replace("__ACTIVE_JSON__", json.dumps(active_waves))
@@ -37,3 +37,4 @@ html_code = html_code.replace("__BTN_PAUSE__", T["pause"])
 html_code = html_code.replace("__BTN_PLAY__", T["play"])
 
 components.html(html_code, height=400)
+
