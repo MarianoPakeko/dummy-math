@@ -55,13 +55,12 @@
     window.addEventListener('resize', resize);
     resize();
 
-    function drawWave(fn, color, isHighlighted, startX, width, centerY, scaleY, isDashed) {
+    function drawWave(fn, color, isHighlighted, startX, width, centerY, scaleY) {
       ctx.save();
       ctx.beginPath();
       ctx.strokeStyle = color;
-      ctx.globalAlpha = isHighlighted ? 1.0 : 0.12;
+      ctx.globalAlpha = isHighlighted ? 1.0 : 0.14;
       ctx.lineWidth = isHighlighted ? 3.2 : 1.5;
-      ctx.setLineDash(isDashed ? [5, 5] : []);
 
       let drawing = false;
       for (let px = 0; px <= width; px += 2) {
@@ -96,7 +95,6 @@
 
       // Ejes base y círculo unitario
       ctx.save();
-      ctx.setLineDash([]);
       ctx.strokeStyle = '#30363d';
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -115,8 +113,8 @@
       // Límites [-1, 1]
       ctx.save();
       ctx.strokeStyle = '#8b949e';
-      ctx.globalAlpha = 0.3;
-      ctx.setLineDash([4, 4]);
+      ctx.globalAlpha = 0.25;
+      ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(wsx, cy0 - r); ctx.lineTo(w - 20, cy0 - r);
       ctx.moveTo(wsx, cy0 + r); ctx.lineTo(w - 20, cy0 + r);
@@ -134,15 +132,15 @@
       // 1. Vista Seno
       if (view === 'sin') {
         ctx.save();
-        ctx.setLineDash([]);
         ctx.strokeStyle = '#3fb950';
         ctx.lineWidth = 4;
         ctx.beginPath(); ctx.moveTo(px, cy0); ctx.lineTo(px, py); ctx.stroke();
 
-        ctx.setLineDash([5, 5]);
-        ctx.lineWidth = 2;
+        ctx.globalAlpha = 0.6;
+        ctx.lineWidth = 1.5;
         ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(wsx, py); ctx.stroke();
 
+        ctx.globalAlpha = 1.0;
         ctx.fillStyle = '#3fb950';
         ctx.beginPath(); ctx.arc(wsx, py, 5, 0, 2 * Math.PI); ctx.fill();
         ctx.restore();
@@ -151,15 +149,15 @@
       // 2. Vista Coseno
       if (view === 'cos') {
         ctx.save();
-        ctx.setLineDash([]);
         ctx.strokeStyle = '#58a6ff';
         ctx.lineWidth = 4;
         ctx.beginPath(); ctx.moveTo(px, cy0); ctx.lineTo(px, py); ctx.stroke();
 
-        ctx.setLineDash([5, 5]);
-        ctx.lineWidth = 2;
+        ctx.globalAlpha = 0.6;
+        ctx.lineWidth = 1.5;
         ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(wsx, py); ctx.stroke();
 
+        ctx.globalAlpha = 1.0;
         ctx.fillStyle = '#58a6ff';
         ctx.beginPath(); ctx.arc(wsx, py, 5, 0, 2 * Math.PI); ctx.fill();
         ctx.restore();
@@ -169,8 +167,8 @@
       if (view === 'tan') {
         ctx.save();
         ctx.strokeStyle = '#f85149';
-        ctx.globalAlpha = 0.35;
-        ctx.setLineDash([4, 4]);
+        ctx.globalAlpha = 0.3;
+        ctx.lineWidth = 1.5;
         ctx.beginPath();
         ctx.moveTo(cx0 + r, cy0 - r * 2.2);
         ctx.lineTo(cx0 + r, cy0 + r * 2.2);
@@ -181,20 +179,20 @@
           const ty = cy0 - tanV * r;
           ctx.save();
           ctx.strokeStyle = '#f0883e';
-          ctx.globalAlpha = 0.45;
-          ctx.setLineDash([3, 3]);
+          ctx.globalAlpha = 0.4;
+          ctx.lineWidth = 1.5;
           ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(cx0 + r, ty); ctx.stroke();
 
           ctx.strokeStyle = '#f85149';
           ctx.globalAlpha = 1.0;
-          ctx.setLineDash([]);
           ctx.lineWidth = 4;
           ctx.beginPath(); ctx.moveTo(cx0 + r, cy0); ctx.lineTo(cx0 + r, ty); ctx.stroke();
 
-          ctx.setLineDash([5, 5]);
-          ctx.lineWidth = 2;
+          ctx.globalAlpha = 0.65;
+          ctx.lineWidth = 1.5;
           ctx.beginPath(); ctx.moveTo(cx0 + r, ty); ctx.lineTo(wsx, ty); ctx.stroke();
 
+          ctx.globalAlpha = 1.0;
           ctx.fillStyle = '#f85149';
           ctx.beginPath(); ctx.arc(wsx, ty, 5, 0, 2 * Math.PI); ctx.fill();
           ctx.restore();
@@ -203,7 +201,6 @@
 
       // Radio giratorio
       ctx.save();
-      ctx.setLineDash([]);
       ctx.strokeStyle = '#f0883e';
       ctx.lineWidth = 3;
       ctx.beginPath(); ctx.moveTo(cx0, cy0); ctx.lineTo(px, py); ctx.stroke();
@@ -213,12 +210,12 @@
 
       // Dibujar las 6 ondas
       if (ww > 50) {
-        drawWave(t => Math.sin(t), '#3fb950', active.sin, wsx, ww, cy0, r, false);
-        drawWave(t => Math.cos(t), '#58a6ff', active.cos, wsx, ww, cy0, r, false);
-        drawWave(t => Math.tan(t), '#f85149', active.tan, wsx, ww, cy0, r, true);
-        drawWave(t => 1 / Math.sin(t), '#56d364', active.csc, wsx, ww, cy0, r, true);
-        drawWave(t => 1 / Math.cos(t), '#79c0ff', active.sec, wsx, ww, cy0, r, true);
-        drawWave(t => Math.cos(t) / Math.sin(t), '#d2a8ff', active.cot, wsx, ww, cy0, r, true);
+        drawWave(t => Math.sin(t), '#3fb950', active.sin, wsx, ww, cy0, r);
+        drawWave(t => Math.cos(t), '#58a6ff', active.cos, wsx, ww, cy0, r);
+        drawWave(t => Math.tan(t), '#f85149', active.tan, wsx, ww, cy0, r);
+        drawWave(t => 1 / Math.sin(t), '#56d364', active.csc, wsx, ww, cy0, r);
+        drawWave(t => 1 / Math.cos(t), '#79c0ff', active.sec, wsx, ww, cy0, r);
+        drawWave(t => Math.cos(t) / Math.sin(t), '#d2a8ff', active.cot, wsx, ww, cy0, r);
       }
 
       if (isPlaying) {
@@ -231,3 +228,4 @@
   </script>
 </body>
 </html>
+
