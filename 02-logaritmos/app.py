@@ -3,7 +3,7 @@ import numpy as np
 import plotly.graph_objects as go
 import streamlit as st
 import streamlit.components.v1 as components
-from textos import TEXTOS
+from textoslog import TEXTOS
 
 st.set_page_config(page_title="Dummy Math | Logarithms", layout="wide")
 
