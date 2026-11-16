@@ -1,0 +1,16 @@
+# 🔭 Chapter 02: The Giant Compressor (Logarithms)
+
+## 🧠 The Core Intuition
+A logarithm is not a mysterious formula; it is simply a **step counter**. 
+* While an exponent asks: *"If I multiply 10 by itself 3 times, what do I get?"* ($10^3 = 1,000$),
+* A logarithm asks the reverse question: *"I have 1,000. How many times did I multiply 10 to get here?"* ($\log_{10}(1,000) = 3$).
+
+Human senses (like hearing decibels or feeling earthquake magnitudes) naturally work logarithmically because our brains compress massive multiplicative leaps into manageable linear steps.
+
+## 📊 Connection to Data Science
+Real-world datasets—such as personal income, website traffic, or city populations—are heavily skewed. On a standard linear chart, a few billionaires or viral posts squash 99% of the data flat against the bottom axis. Applying a **logarithmic transformation** decompresses small values, stabilizes variance, and allows Machine Learning models to detect hidden patterns.
+
+## 🚀 Run the Interactive Lab
+```bash
+streamlit run 02-logaritmos/app.py
+```
