@@ -3,15 +3,17 @@
 <head>
 <style>
   body { margin: 0; background-color: #0e1117; font-family: sans-serif; color: white; overflow: hidden; }
-  .toolbar { padding: 6px 12px; background: #161b22; border-radius: 8px; margin-bottom: 8px; border: 1px solid #30363d; }
+  .toolbar { padding: 6px 12px; background: #161b22; border-radius: 8px; margin-bottom: 8px; border: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center; }
   button { background-color: #238636; color: white; border: none; padding: 6px 16px; font-size: 14px; font-weight: 600; border-radius: 6px; cursor: pointer; }
   button.paused { background-color: #d29922; }
-  canvas { display: block; width: 100%; height: 340px; background-color: #0e1117; border-radius: 8px; border: 1px solid #21262d; }
+  .hint { font-size: 12px; color: #8b949e; }
+  canvas { display: block; width: 100%; height: 420px; background-color: #0e1117; border-radius: 8px; border: 1px solid #21262d; }
 </style>
 </head>
 <body>
   <div class="toolbar">
     <button id="toggleBtn" onclick="togglePlay()">__BTN_PAUSE__</button>
+    <span class="hint">Top Circle: Sine & Tangent | Bottom Circle (Rotated 90°): Cosine</span>
   </div>
   <canvas id="trigCanvas"></canvas>
 
@@ -33,7 +35,7 @@
 
     function resize() {
       canvas.width = canvas.clientWidth * window.devicePixelRatio;
-      canvas.height = 340 * window.devicePixelRatio;
+      canvas.height = 420 * window.devicePixelRatio;
       ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
     }
     window.addEventListener('resize', resize);
@@ -51,7 +53,7 @@
       for (let px = 0; px <= width; px += 2) {
         const theta = angle - (px / width) * 4 * Math.PI;
         const val = fn(theta);
-        if (Math.abs(val) > 3.2 || isNaN(val)) {
+        if (Math.abs(val) > 3.0 || isNaN(val)) {
           drawing = false;
           continue;
         }
@@ -67,149 +69,227 @@
       ctx.restore();
     }
 
-    function animate() {
-      const w = canvas.clientWidth;
-      const h = 340;
-      ctx.clearRect(0, 0, w, h);
-
-      const circleCenterX = Math.min(150, w * 0.22);
-      const centerY = h / 2;
-      const radius = 85;
-      const waveStartX = circleCenterX + radius + 65;
-      const waveWidth = w - waveStartX - 20;
-
-      // Ejes del círculo
+    function drawCircleBase(cx, cy, r) {
       ctx.strokeStyle = '#30363d';
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(circleCenterX - radius - 15, centerY);
-      ctx.lineTo(circleCenterX + radius + 15, centerY);
-      ctx.moveTo(circleCenterX, centerY - radius - 15);
-      ctx.lineTo(circleCenterX, centerY + radius + 15);
+      ctx.moveTo(cx - r - 12, cy);
+      ctx.lineTo(cx + r + 12, cy);
+      ctx.moveTo(cx, cy - r - 12);
+      ctx.lineTo(cx, cy + r + 12);
       ctx.stroke();
 
-      // Círculo Unitario
       ctx.strokeStyle = '#8b949e';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(circleCenterX, centerY, radius, 0, 2 * Math.PI);
+      ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+      ctx.stroke();
+    }
+
+    function animate() {
+      const w = canvas.clientWidth;
+      const h = 420;
+      ctx.clearRect(0, 0, w, h);
+
+      const circleX = Math.min(130, w * 0.20);
+      const radius = 65;
+      
+      // Dos círculos a la izquierda: Superior (Seno/Tan) e Inferior rotado 90° (Coseno)
+      const topCircleY = 115;
+      const botCircleY = 305;
+
+      const waveStartX = circleX + radius + 60;
+      const waveWidth = w - waveStartX - 20;
+      const waveCenterY = h / 2;
+      const waveScaleY = 65; // Misma escala exacta que el radio para que las líneas rectas coincidan
+
+      const sinVal = Math.sin(angle);
+      const cosVal = Math.cos(angle);
+      const tanVal = Math.tan(angle);
+
+      // ==========================================
+      // 1. CÍRCULO SUPERIOR: SENO Y TANGENTE
+      // ==========================================
+      drawCircleBase(circleX, topCircleY, radius);
+      const pxTop = circleX + cosVal * radius;
+      const pyTop = topCircleY - sinVal * radius;
+
+      // Pared vertical tangente en el borde derecho del círculo superior
+      if (active.tan) {
+        ctx.save();
+        ctx.strokeStyle = '#f85149';
+        ctx.globalAlpha = 0.35;
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.moveTo(circleX + radius, topCircleY - radius * 2.2);
+        ctx.lineTo(circleX + radius, topCircleY + radius * 2.2);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Sombra Seno (Vertical Verde)
+      ctx.save();
+      ctx.strokeStyle = '#3fb950';
+      ctx.globalAlpha = active.sin ? 1.0 : 0.2;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(pxTop, topCircleY);
+      ctx.lineTo(pxTop, pyTop);
+      ctx.stroke();
+      ctx.restore();
+
+      // Radio superior
+      ctx.strokeStyle = '#f0883e';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(circleX, topCircleY);
+      ctx.lineTo(pxTop, pyTop);
       ctx.stroke();
 
+      // Proyección de la Tangente en la pared derecha
+      if (active.tan && Math.abs(tanVal) <= 2.5) {
+        const tanWallY = topCircleY - tanVal * radius;
+        // Línea que extiende el radio hasta la pared tangente
+        ctx.save();
+        ctx.strokeStyle = '#f0883e';
+        ctx.globalAlpha = 0.4;
+        ctx.setLineDash([2, 2]);
+        ctx.beginPath();
+        ctx.moveTo(circleX, topCircleY);
+        ctx.lineTo(circleX + radius, tanWallY);
+        ctx.stroke();
+
+        // Segmento vertical rojo de la Tangente sobre la pared
+        ctx.strokeStyle = '#f85149';
+        ctx.globalAlpha = 1.0;
+        ctx.setLineDash([]);
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(circleX + radius, topCircleY);
+        ctx.lineTo(circleX + radius, tanWallY);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // ==========================================
+      // 2. CÍRCULO INFERIOR (ROTADO 90°): COSENO VERTICAL
+      // ==========================================
+      drawCircleBase(circleX, botCircleY, radius);
+      // Al rotar el círculo 90°, el eje del Coseno queda vertical
+      const pxBot = circleX + sinVal * radius;
+      const pyBot = botCircleY - cosVal * radius;
+
+      // Sombra Coseno ahora vertical (Azul)
+      ctx.save();
+      ctx.strokeStyle = '#58a6ff';
+      ctx.globalAlpha = active.cos ? 1.0 : 0.2;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(pxBot, botCircleY);
+      ctx.lineTo(pxBot, pyBot);
+      ctx.stroke();
+      ctx.restore();
+
+      // Radio inferior
+      ctx.strokeStyle = '#f0883e';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(circleX, botCircleY);
+      ctx.lineTo(pxBot, pyBot);
+      ctx.stroke();
+
+      // ==========================================
+      // 3. ZONA DE ONDAS Y CONECTORES RECTOS
+      // ==========================================
       // Líneas límite [-1, 1]
       ctx.save();
       ctx.strokeStyle = '#8b949e';
       ctx.globalAlpha = 0.3;
       ctx.setLineDash([4, 4]);
       ctx.beginPath();
-      ctx.moveTo(waveStartX, centerY - radius);
-      ctx.lineTo(w - 20, centerY - radius);
-      ctx.moveTo(waveStartX, centerY + radius);
-      ctx.lineTo(w - 20, centerY + radius);
+      ctx.moveTo(waveStartX, waveCenterY - waveScaleY);
+      ctx.lineTo(w - 20, waveCenterY - waveScaleY);
+      ctx.moveTo(waveStartX, waveCenterY + waveScaleY);
+      ctx.lineTo(w - 20, waveCenterY + waveScaleY);
       ctx.stroke();
       ctx.restore();
 
       // Eje central de ondas
       ctx.strokeStyle = '#30363d';
       ctx.beginPath();
-      ctx.moveTo(waveStartX, centerY);
-      ctx.lineTo(w - 20, centerY);
+      ctx.moveTo(waveStartX, waveCenterY);
+      ctx.lineTo(w - 20, waveCenterY);
       ctx.stroke();
 
-      const cosVal = Math.cos(angle);
-      const sinVal = Math.sin(angle);
-      const cx = circleCenterX + cosVal * radius;
-      const cy = centerY - sinVal * radius;
+      const sinWaveY = waveCenterY - sinVal * waveScaleY;
+      const cosWaveY = waveCenterY - cosVal * waveScaleY;
+      const tanWaveY = waveCenterY - tanVal * waveScaleY;
 
-      // Sombra Coseno (Azul)
-      ctx.save();
-      ctx.strokeStyle = '#58a6ff';
-      ctx.globalAlpha = active.cos ? 1.0 : 0.15;
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.moveTo(circleCenterX, centerY);
-      ctx.lineTo(cx, centerY);
-      ctx.stroke();
-      ctx.restore();
-
-      // Sombra Seno (Verde)
-      ctx.save();
-      ctx.strokeStyle = '#3fb950';
-      ctx.globalAlpha = active.sin ? 1.0 : 0.15;
-      ctx.lineWidth = 4;
-      ctx.setLineDash([4, 4]);
-      ctx.beginPath();
-      ctx.moveTo(cx, centerY);
-      ctx.lineTo(cx, cy);
-      ctx.stroke();
-      ctx.restore();
-
-      // Radio giratorio
-      ctx.strokeStyle = '#f0883e';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(circleCenterX, centerY);
-      ctx.lineTo(cx, cy);
-      ctx.stroke();
-
-      ctx.fillStyle = '#f0883e';
-      ctx.beginPath();
-      ctx.arc(cx, cy, 5, 0, 2 * Math.PI);
-      ctx.fill();
-
-      // Conector recto del Seno
+      // Línea conectora recta del SENO (Verde)
       if (active.sin) {
         ctx.save();
         ctx.strokeStyle = '#3fb950';
-        ctx.globalAlpha = 0.55;
-        ctx.setLineDash([3, 3]);
+        ctx.globalAlpha = 0.75;
+        ctx.setLineDash([4, 4]);
         ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.lineTo(waveStartX, cy);
+        ctx.moveTo(pxTop, pyTop);
+        ctx.lineTo(waveStartX, sinWaveY);
         ctx.stroke();
-
         ctx.fillStyle = '#3fb950';
         ctx.beginPath();
-        ctx.arc(waveStartX, cy, 4.5, 0, 2 * Math.PI);
+        ctx.arc(waveStartX, sinWaveY, 5, 0, 2 * Math.PI);
         ctx.fill();
         ctx.restore();
       }
 
-      // Conector curvo del Coseno
+      // Línea conectora recta del COSENO desde el círculo rotado (Azul)
       if (active.cos) {
-        const cosWaveY = centerY - cosVal * radius;
         ctx.save();
         ctx.strokeStyle = '#58a6ff';
-        ctx.globalAlpha = 0.55;
-        ctx.setLineDash([3, 3]);
+        ctx.globalAlpha = 0.75;
+        ctx.setLineDash([4, 4]);
         ctx.beginPath();
-        ctx.moveTo(cx, centerY);
-        ctx.quadraticCurveTo(circleCenterX + radius + 20, centerY, waveStartX, cosWaveY);
+        ctx.moveTo(pxBot, pyBot);
+        ctx.lineTo(waveStartX, cosWaveY);
         ctx.stroke();
-
         ctx.fillStyle = '#58a6ff';
         ctx.beginPath();
-        ctx.arc(waveStartX, cosWaveY, 4.5, 0, 2 * Math.PI);
+        ctx.arc(waveStartX, cosWaveY, 5, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // Línea conectora recta de la TANGENTE desde la pared derecha (Roja)
+      if (active.tan && Math.abs(tanVal) <= 2.5) {
+        const tanWallY = topCircleY - tanVal * radius;
+        ctx.save();
+        ctx.strokeStyle = '#f85149';
+        ctx.globalAlpha = 0.85;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(circleX + radius, tanWallY);
+        ctx.lineTo(waveStartX, tanWaveY);
+        ctx.stroke();
+        ctx.fillStyle = '#f85149';
+        ctx.beginPath();
+        ctx.arc(waveStartX, tanWaveY, 5, 0, 2 * Math.PI);
         ctx.fill();
         ctx.restore();
       }
 
       // Dibujar las 6 ondas
       if (waveWidth > 50) {
-        drawWave(t => Math.sin(t), '#3fb950', active.sin, waveStartX, waveWidth, centerY, radius);
-        drawWave(t => Math.cos(t), '#58a6ff', active.cos, waveStartX, waveWidth, centerY, radius);
-        drawWave(t => Math.tan(t), '#f85149', active.tan, waveStartX, waveWidth, centerY, radius, true);
-        drawWave(t => 1 / Math.sin(t), '#56d364', active.csc, waveStartX, waveWidth, centerY, radius, true);
-        drawWave(t => 1 / Math.cos(t), '#79c0ff', active.sec, waveStartX, waveWidth, centerY, radius, true);
-        drawWave(t => Math.cos(t) / Math.sin(t), '#d2a8ff', active.cot, waveStartX, waveWidth, centerY, radius, true);
+        drawWave(t => Math.sin(t), '#3fb950', active.sin, waveStartX, waveWidth, waveCenterY, waveScaleY);
+        drawWave(t => Math.cos(t), '#58a6ff', active.cos, waveStartX, waveWidth, waveCenterY, waveScaleY);
+        drawWave(t => Math.tan(t), '#f85149', active.tan, waveStartX, waveWidth, waveCenterY, waveScaleY, true);
+        drawWave(t => 1 / Math.sin(t), '#56d364', active.csc, waveStartX, waveWidth, waveCenterY, waveScaleY, true);
+        drawWave(t => 1 / Math.cos(t), '#79c0ff', active.sec, waveStartX, waveWidth, waveCenterY, waveScaleY, true);
+        drawWave(t => Math.cos(t) / Math.sin(t), '#d2a8ff', active.cot, waveStartX, waveWidth, waveCenterY, waveScaleY, true);
       }
 
       if (isPlaying) {
-        angle += 0.025;
+        angle += 0.022;
       }
-      requestAnimationFrame(animate);
-    }
-
-    animate();
-  </script>
-</body>
-</html>
+requestAnimationFrame(animate);
+}
+animate();
