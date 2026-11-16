@@ -2,204 +2,374 @@ import streamlit as st
 import streamlit.components.v1 as components
 import numpy as np
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
-st.set_page_config(page_title="Dummy Math | Chapter 01: Trigonometry", layout="wide")
-
-st.title("📐 Chapter 01: The Circle and the Shadows")
-st.info(
-    "💡 **Fundamental Rule:** Because the unit circle has a fixed radius of **1**, "
-    "**Sine** and **Cosine** are permanently trapped between **-1** and **1**. "
-    "Their reciprocals (**Secant** and **Cosecant**) live completely outside that `[-1, 1]` corridor."
-)
+st.set_page_config(page_title="Dummy Math | Trigonometry", layout="wide")
 
 # ==========================================
-# SECCIÓN 1: BANNER EN MOVIMIENTO CONTINUO INFINITO
+# 🌐 DICCIONARIO MULTILINGÜE (EN / ES / IT)
 # ==========================================
-st.subheader("🌊 1. Synchronized Circle & Wave Banner")
-st.caption("Toggle one or more functions below to highlight them simultaneously:")
+TEXTOS = {
+    "English": {
+        "title": "📐 Chapter 01: The Circle and the Shadows",
+        "rule": "💡 **Fundamental Rule:** Because the unit circle has a fixed radius of **1**, **Sine** and **Cosine** are permanently trapped between **-1** and **1**. Their reciprocals (**Secant** and **Cosecant**) live completely outside that `[-1, 1]` corridor.",
+        "sec1": "🌊 1. Perpetual Motion Banner (Circle & Waves)",
+        "cap1": "Toggle one or more functions to highlight them simultaneously:",
+        "btn_pause": "⏸️ Pause",
+        "btn_play": "▶️ Play",
+        "sin": "Sine (sin)",
+        "cos": "Cosine (cos)",
+        "tan": "Tangent (tan)",
+        "csc": "Cosecant (1/sin)",
+        "sec": "Secant (1/cos)",
+        "cot": "Cotangent (1/tan)",
+        "sec2": "🧮 2. Unit Circle & Trigonometric Calculator",
+        "input_ang": "Type any angle in degrees (e.g., 30, 45, 90, -60, 720):",
+        "rad_eq": "Equivalent in Radians:",
+        "inf": "∞ (Undefined)"
+    },
+    "Español": {
+        "title": "📐 Capítulo 01: El Círculo y las Sombras",
+        "rule": "💡 **Regla Fundamental:** Como el círculo unitario tiene un radio fijo de **1**, el **Seno** y el **Coseno** están atrapados para siempre entre **-1** y **1**. Sus recíprocas (**Secante** y **Cosecante**) viven completamente fuera de ese pasillo `[-1, 1]`.",
+        "sec1": "🌊 1. Banner de Movimiento Perpetuo (Círculo y Ondas)",
+        "cap1": "Activa una o varias funciones para resaltarlas al mismo tiempo:",
+        "btn_pause": "⏸️ Pausar",
+        "btn_play": "▶️ Reanudar",
+        "sin": "Seno (sen)",
+        "cos": "Coseno (cos)",
+        "tan": "Tangente (tan)",
+        "csc": "Cosecante (1/sen)",
+        "sec": "Secante (1/cos)",
+        "cot": "Cotangente (1/tan)",
+        "sec2": "🧮 2. Calculadora del Círculo Unitario",
+        "input_ang": "Escribe cualquier ángulo en grados (ej. 30, 45, 90, -60, 720):",
+        "rad_eq": "Equivalente en Radianes:",
+        "inf": "∞ (Indefinido)"
+    },
+    "Italiano": {
+        "title": "📐 Capitolo 01: Il Cerchio e le Ombre",
+        "rule": "💡 **Regola Fondamentale:** Poiché il cerchio unitario ha un raggio fisso di **1**, **Seno** e **Coseno** sono intrappolati per sempre tra **-1** e **1**. Le loro reciproche (**Secante** e **Cosecante**) vivono completamente fuori dal corridoio `[-1, 1]`.",
+        "sec1": "🌊 1. Banner a Moto Perpetuo (Cerchio e Onde)",
+        "cap1": "Attiva una o più funzioni per evidenziarle contemporaneamente:",
+        "btn_pause": "⏸️ Pausa",
+        "btn_play": "▶️ Riprendi",
+        "sin": "Seno (sen)",
+        "cos": "Coseno (cos)",
+        "tan": "Tangente (tan)",
+        "csc": "Cosecante (1/sen)",
+        "sec": "Secante (1/cos)",
+        "cot": "Cotangente (1/tan)",
+        "sec2": "🧮 2. Calcolatrice del Cerchio Unitario",
+        "input_ang": "Inserisci qualsiasi angolo in gradi (es. 30, 45, 90, -60, 720):",
+        "rad_eq": "Equivalente in Radianti:",
+        "inf": "∞ (Indefinito)"
+    }
+}
+
+# Selector de idioma en la parte superior derecha
+col_t, col_lang = st.columns([4, 1])
+with col_lang:
+    idioma = st.selectbox("🌐 Language", ["Español", "English", "Italiano"], label_visibility="collapsed")
+
+T = TEXTOS[idioma]
+
+with col_t:
+    st.title(T["title"])
+
+st.info(T["rule"])
+
+# ==========================================
+# SECCIÓN 1: BANNER PERPETUO (HTML5 CANVAS 60 FPS)
+# ==========================================
+st.subheader(T["sec1"])
+st.caption(T["cap1"])
 
 c1, c2, c3, c4, c5, c6 = st.columns(6)
-hi_sin = c1.toggle("🟢 Sine (sin)", value=True)
-hi_cos = c2.toggle("🔵 Cosine (cos)", value=True)
-hi_tan = c3.toggle("🔴 Tangent (tan)", value=False)
-hi_csc = c4.toggle("🟩 Cosecant (1/sin)", value=False)
-hi_sec = c5.toggle("🟦 Secant (1/cos)", value=False)
-hi_cot = c6.toggle("🟣 Cotangent (1/tan)", value=False)
+hi_sin = c1.toggle(f"🟢 {T['sin']}", value=True)
+hi_cos = c2.toggle(f"🔵 {T['cos']}", value=True)
+hi_tan = c3.toggle(f"🔴 {T['tan']}", value=False)
+hi_csc = c4.toggle(f"🟩 {T['csc']}", value=False)
+hi_sec = c5.toggle(f"🟦 {T['sec']}", value=False)
+hi_cot = c6.toggle(f"🟣 {T['cot']}", value=False)
 
-def get_style(is_active, base_w=2.5):
-    if is_active:
-        return 1.0, base_w + 1.2
-    return 0.12, base_w - 0.5
+# Motor HTML5 Canvas con bucle infinito real (requestAnimationFrame) y 1 solo botón Play/Pause
+html_canvas = f"""
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body {{
+    margin: 0;
+    background-color: #0e1117;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: white;
+    overflow: hidden;
+  }}
+  .toolbar {{
+    display: flex;
+    align-items: center;
+    padding: 6px 12px;
+    background: #161b22;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    border: 1px solid #30363d;
+  }}
+  button {{
+    background-color: #238636;
+    color: white;
+    border: none;
+    padding: 6px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }}
+  button.paused {{
+    background-color: #d29922;
+  }}
+  button:hover {{
+    opacity: 0.9;
+  }}
+  canvas {{
+    display: block;
+    width: 100%;
+    height: 300px;
+    background-color: #0e1117;
+    border-radius: 8px;
+    border: 1px solid #21262d;
+  }}
+</style>
+</head>
+<body>
+  <div class="toolbar">
+    <button id="toggleBtn" onclick="togglePlay()">{T['btn_pause']}</button>
+  </div>
+  <canvas id="trigCanvas"></canvas>
 
-op_sin, lw_sin = get_style(hi_sin)
-op_cos, lw_cos = get_style(hi_cos)
-op_tan, lw_tan = get_style(hi_tan, 2.2)
-op_csc, lw_csc = get_style(hi_csc, 2.2)
-op_sec, lw_sec = get_style(hi_sec, 2.2)
-op_cot, lw_cot = get_style(hi_cot, 2.2)
+  <script>
+    const canvas = document.getElementById('trigCanvas');
+    const ctx = canvas.getContext('2d');
+    const btn = document.getElementById('toggleBtn');
 
-def clean_inf(arr, limit=3.2):
-    c = arr.copy()
-    c[np.abs(c) > limit] = np.nan
-    return c
+    let isPlaying = true;
+    let angle = 0;
 
-x_banner = np.linspace(0, 4 * np.pi, 240)
+    const active = {{
+      sin: {'true' if hi_sin else 'false'},
+      cos: {'true' if hi_cos else 'false'},
+      tan: {'true' if hi_tan else 'false'},
+      csc: {'true' if hi_csc else 'false'},
+      sec: {'true' if hi_sec else 'false'},
+      cot: {'true' if hi_cot else 'false'}
+    }};
 
-def calcular_ondas(fase):
-    s = np.sin(fase - x_banner)
-    c = np.cos(fase - x_banner)
-    t = clean_inf(np.tan(fase - x_banner))
-    csc = clean_inf(1.0 / np.where(np.isclose(s, 0, atol=1e-2), np.nan, s))
-    sec = clean_inf(1.0 / np.where(np.isclose(c, 0, atol=1e-2), np.nan, c))
-    cot = clean_inf(c / np.where(np.isclose(s, 0, atol=1e-2), np.nan, s))
-    return s, c, t, csc, sec, cot
+    function togglePlay() {{
+      isPlaying = !isPlaying;
+      if (isPlaying) {{
+        btn.innerText = "{T['btn_pause']}";
+        btn.classList.remove("paused");
+      }} else {{
+        btn.innerText = "{T['btn_play']}";
+        btn.classList.add("paused");
+      }}
+    }}
 
-fig_banner = make_subplots(
-    rows=1, cols=2,
-    column_widths=[0.28, 0.72],
-    horizontal_spacing=0.06,
-    subplot_titles=("Rotating Unit Circle", "Waves Flowing From Circle")
-)
+    function resize() {{
+      canvas.width = canvas.clientWidth * window.devicePixelRatio;
+      canvas.height = 300 * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    }}
+    window.addEventListener('resize', resize);
+    resize();
 
-# Círculo fijo de fondo (Trazo 0)
-theta_c = np.linspace(0, 2 * np.pi, 150)
-fig_banner.add_trace(go.Scatter(x=np.cos(theta_c), y=np.sin(theta_c), mode="lines",
-                                line=dict(color="#8b949e", width=2), showlegend=False), row=1, col=1)
+    function drawWave(fn, color, isHighlighted, startX, width, centerY, scaleY, isDashed=false) {{
+      ctx.save();
+      ctx.beginPath();
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = isHighlighted ? 1.0 : 0.14;
+      ctx.lineWidth = isHighlighted ? 3.2 : 1.5;
+      if (isDashed) ctx.setLineDash([5, 5]);
 
-s0, c0, t0, csc0, sec0, cot0 = calcular_ondas(0)
+      let drawing = false;
+      for (let px = 0; px <= width; px += 2) {{
+        const theta = angle - (px / width) * 4 * Math.PI;
+        const val = fn(theta);
+        if (Math.abs(val) > 3.2 || isNaN(val)) {{
+          drawing = false;
+          continue;
+        }}
+        const py = centerY - val * scaleY;
+        if (!drawing) {{
+          ctx.moveTo(startX + px, py);
+          drawing = true;
+        }} else {{
+          ctx.lineTo(startX + px, py);
+        }}
+      }}
+      ctx.stroke();
+      ctx.restore();
+    }}
 
-# Trazos dinámicos del círculo (Trazos 1, 2, 3)
-fig_banner.add_trace(go.Scatter(x=[0, 1], y=[0, 0], mode="lines+markers",
-                                line=dict(color="#f0883e", width=3), marker=dict(size=8), name="Radius"), row=1, col=1)
-fig_banner.add_trace(go.Scatter(x=[0, 1], y=[0, 0], mode="lines",
-                                line=dict(color="#58a6ff", width=lw_cos + 1.5), opacity=op_cos, showlegend=False), row=1, col=1)
-fig_banner.add_trace(go.Scatter(x=[1, 1], y=[0, 0], mode="lines",
-                                line=dict(color="#3fb950", width=lw_sin + 1.5, dash="dot"), opacity=op_sin, showlegend=False), row=1, col=1)
+    function animate() {{
+      const w = canvas.clientWidth;
+      const h = 300;
+      ctx.clearRect(0, 0, w, h);
 
-# Trazos dinámicos de las 6 ondas (Trazos 4, 5, 6, 7, 8, 9)
-fig_banner.add_trace(go.Scatter(x=x_banner, y=s0, mode="lines", line=dict(color="#3fb950", width=lw_sin), opacity=op_sin, name="Sine (sin)"), row=1, col=2)
-fig_banner.add_trace(go.Scatter(x=x_banner, y=c0, mode="lines", line=dict(color="#58a6ff", width=lw_cos), opacity=op_cos, name="Cosine (cos)"), row=1, col=2)
-fig_banner.add_trace(go.Scatter(x=x_banner, y=t0, mode="lines", line=dict(color="#f85149", width=lw_tan, dash="dash"), opacity=op_tan, name="Tangent (tan)"), row=1, col=2)
-fig_banner.add_trace(go.Scatter(x=x_banner, y=csc0, mode="lines", line=dict(color="#56d364", width=lw_csc, dash="dot"), opacity=op_csc, name="Cosecant (1/sin)"), row=1, col=2)
-fig_banner.add_trace(go.Scatter(x=x_banner, y=sec0, mode="lines", line=dict(color="#79c0ff", width=lw_sec, dash="dot"), opacity=op_sec, name="Secant (1/cos)"), row=1, col=2)
-fig_banner.add_trace(go.Scatter(x=x_banner, y=cot0, mode="lines", line=dict(color="#d2a8ff", width=lw_cot, dash="dashdot"), opacity=op_cot, name="Cotangent (1/tan)"), row=1, col=2)
+      const circleCenterX = Math.min(140, w * 0.22);
+      const centerY = h / 2;
+      const radius = 75;
+      const waveStartX = circleCenterX + radius + 55;
+      const waveWidth = w - waveStartX - 20;
 
-indices_animados = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+      // Ejes del círculo
+      ctx.strokeStyle = '#30363d';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(circleCenterX - radius - 15, centerY);
+      ctx.lineTo(circleCenterX + radius + 15, centerY);
+      ctx.moveTo(circleCenterX, centerY - radius - 15);
+      ctx.lineTo(circleCenterX, centerY + radius + 15);
+      ctx.stroke();
 
-# Líneas límite [-1, 1]
-fig_banner.add_hline(y=1, line_width=1, line_dash="dot", line_color="#8b949e", opacity=0.4, row=1, col=2)
-fig_banner.add_hline(y=-1, line_width=1, line_dash="dot", line_color="#8b949e", opacity=0.4, row=1, col=2)
+      // Círculo Unitario fijo
+      ctx.strokeStyle = '#8b949e';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(circleCenterX, centerY, radius, 0, 2 * Math.PI);
+      ctx.stroke();
 
-# Generar 60 frames sincronizados
-frames = []
-fases = np.linspace(0, 2 * np.pi, 60, endpoint=False)
-for idx, f in enumerate(fases):
-    cx, cy = np.cos(f), np.sin(f)
-    sf, cf, tf, cscf, secf, cotf = calcular_ondas(f)
-    
-    frame_data = [
-        go.Scatter(x=[0, cx], y=[0, cy]),
-        go.Scatter(x=[0, cx], y=[0, 0]),
-        go.Scatter(x=[cx, cx], y=[0, cy]),
-        go.Scatter(y=sf),
-        go.Scatter(y=cf),
-        go.Scatter(y=tf),
-        go.Scatter(y=cscf),
-        go.Scatter(y=secf),
-        go.Scatter(y=cotf)
-    ]
-    frames.append(go.Frame(data=frame_data, traces=indices_animados, name=str(idx)))
+      // Líneas límite [-1, 1] en las ondas
+      ctx.save();
+      ctx.strokeStyle = '#8b949e';
+      ctx.globalAlpha = 0.35;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(waveStartX, centerY - radius);
+      ctx.lineTo(w - 20, centerY - radius);
+      ctx.moveTo(waveStartX, centerY + radius);
+      ctx.lineTo(w - 20, centerY + radius);
+      ctx.stroke();
+      ctx.restore();
 
-fig_banner.frames = frames
+      // Eje central de las ondas
+      ctx.strokeStyle = '#30363d';
+      ctx.beginPath();
+      ctx.moveTo(waveStartX, centerY);
+      ctx.lineTo(w - 20, centerY);
+      ctx.stroke();
 
-# Ejes fijos
-fig_banner.update_xaxes(range=[-1.25, 1.25], fixedrange=True, zeroline=True, zerolinecolor="#30363d", row=1, col=1)
-fig_banner.update_yaxes(range=[-1.25, 1.25], fixedrange=True, scaleanchor="x", scaleratio=1, zeroline=True, zerolinecolor="#30363d", row=1, col=1)
+      // Posición actual en el círculo
+      const cx = circleCenterX + Math.cos(angle) * radius;
+      const cy = centerY - Math.sin(angle) * radius;
 
-fig_banner.update_xaxes(
-    range=[0, 4 * np.pi],
-    tickvals=[0, np.pi, 2*np.pi, 3*np.pi, 4*np.pi],
-    ticktext=["0 (Now)", "π", "2π", "3π", "4π"],
-    fixedrange=True, gridcolor="#21262d", row=1, col=2
-)
-fig_banner.update_yaxes(range=[-2.5, 2.5], fixedrange=True, zeroline=True, zerolinecolor="#30363d", gridcolor="#21262d", row=1, col=2)
+      // Sombra Coseno (Azul)
+      ctx.save();
+      ctx.strokeStyle = '#58a6ff';
+      ctx.globalAlpha = active.cos ? 1.0 : 0.2;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(circleCenterX, centerY);
+      ctx.lineTo(cx, centerY);
+      ctx.stroke();
+      ctx.restore();
 
-fig_banner.update_layout(
-    template="plotly_dark",
-    paper_bgcolor="#0e1117",
-    plot_bgcolor="#0e1117",
-    height=350,
-    margin=dict(l=20, r=20, t=45, b=20),
-    updatemenus=[dict(
-        type="buttons",
-        showactive=False,
-        x=0.0, y=1.18,
-        direction="left",
-        buttons=[
-            dict(label="▶️ Play Motion", method="animate",
-                 args=[None, dict(frame=dict(duration=35, redraw=False), fromcurrent=True, mode="immediate", transition=dict(duration=0))]),
-            dict(label="⏸️ Pause", method="animate",
-                 args=[[None], dict(frame=dict(duration=0, redraw=False), mode="immediate")])
-        ]
-    )]
-)
+      // Sombra Seno (Verde)
+      ctx.save();
+      ctx.strokeStyle = '#3fb950';
+      ctx.globalAlpha = active.sin ? 1.0 : 0.2;
+      ctx.lineWidth = 4;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(cx, centerY);
+      ctx.lineTo(cx, cy);
+      ctx.stroke();
+      ctx.restore();
 
-# Renderizar con auto_play=True para que arranque solo y nunca se detenga
-html_banner = fig_banner.to_html(
-    include_plotlyjs="cdn",
-    auto_play=True,
-    animation_opts=dict(frame=dict(duration=35, redraw=False), transition=dict(duration=0), mode="immediate", fromcurrent=True)
-)
-components.html(html_banner, height=370)
+      // Radio giratorio (Naranja)
+      ctx.strokeStyle = '#f0883e';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(circleCenterX, centerY);
+      ctx.lineTo(cx, cy);
+      ctx.stroke();
 
+      ctx.fillStyle = '#f0883e';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 5, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Conector visual del círculo hacia el inicio de la onda Seno
+      if (active.sin) {{
+        ctx.save();
+        ctx.strokeStyle = '#3fb950';
+        ctx.globalAlpha = 0.4;
+ctx.setLineDash([3, 3]);
+ctx.beginPath();
+ctx.moveTo(cx, cy);
+ctx.lineTo(waveStartX, cy);
+ctx.stroke();
+ctx.restore();
+}}
+// Dibujar las 6 ondas en movimiento continuo
+if (waveWidth > 50) {{
+drawWave(t => Math.sin(t), '#3fb950', active.sin, waveStartX, waveWidth, centerY, radius);
+drawWave(t => Math.cos(t), '#58a6ff', active.cos, waveStartX, waveWidth, centerY, radius);
+drawWave(t => Math.tan(t), '#f85149', active.tan, waveStartX, waveWidth, centerY, radius, true);
+drawWave(t => 1 / Math.sin(t), '#56d364', active.csc, waveStartX, waveWidth, centerY, radius, true);
+drawWave(t => 1 / Math.cos(t), '#79c0ff', active.sec, waveStartX, waveWidth, centerY, radius, true);
+drawWave(t => Math.cos(t) / Math.sin(t), '#d2a8ff', active.cot, waveStartX, waveWidth, centerY, radius, true);
+}}
+if (isPlaying) {{
+angle += 0.025; // Velocidad perpetua suave
+}}
+requestAnimationFrame(animate);
+}}
+animate();
+
+
+components.html(html_canvas, height=355)
 st.divider()
 
-# ==========================================
-# SECCIÓN 2: CALCULADORA MANUAL DEL CÍRCULO UNITARIO
-# ==========================================
-st.subheader("🧮 2. Unit Circle & Trigonometric Calculator")
+==========================================
 
+
+SECCIÓN 2: CALCULADORA MANUAL DEL CÍRCULO UNITARIO
+
+
+==========================================
+
+st.subheader(T["sec2"])
 col_calc_left, col_calc_right = st.columns([1.1, 1.3])
-
 with col_calc_left:
-    angulo_libre = st.number_input("Type any angle in degrees (e.g., 30, 45, 90, -60, 720):", value=45.0, step=15.0)
-    
-    rad_libre = np.deg2rad(angulo_libre)
-    c_val = np.cos(rad_libre)
-    s_val = np.sin(rad_libre)
-    t_val = np.tan(rad_libre) if not np.isclose(c_val, 0, atol=1e-4) else np.nan
-    csc_v = 1.0 / s_val if not np.isclose(s_val, 0, atol=1e-4) else np.nan
-    sec_v = 1.0 / c_val if not np.isclose(c_val, 0, atol=1e-4) else np.nan
-    cot_v = c_val / s_val if not np.isclose(s_val, 0, atol=1e-4) else np.nan
-
-    st.caption(f"Equivalent in Radians: **{rad_libre:.4f} rad** ({rad_libre/np.pi:.2f} π)")
-
-    m1, m2, m3 = st.columns(3)
-    m1.metric("Cosine (X)", f"{c_val:.4f}")
-    m2.metric("Sine (Y)", f"{s_val:.4f}")
-    m3.metric("Tangent", f"{t_val:.4f}" if not np.isnan(t_val) else "∞")
-
-    m4, m5, m6 = st.columns(3)
-    m4.metric("Secant (1/cos)", f"{sec_v:.4f}" if not np.isnan(sec_v) else "∞")
-    m5.metric("Cosecant (1/sin)", f"{csc_v:.4f}" if not np.isnan(csc_v) else "∞")
-    m6.metric("Cotangent (1/tan)", f"{cot_v:.4f}" if not np.isnan(cot_v) else "∞")
-
+angulo_libre = st.number_input(T["input_ang"], value=45.0, step=15.0)
+rad_libre = np.deg2rad(angulo_libre)
+c_val = np.cos(rad_libre)
+s_val = np.sin(rad_libre)
+t_val = np.tan(rad_libre) if not np.isclose(c_val, 0, atol=1e-4) else np.nan
+csc_v = 1.0 / s_val if not np.isclose(s_val, 0, atol=1e-4) else np.nan
+sec_v = 1.0 / c_val if not np.isclose(c_val, 0, atol=1e-4) else np.nan
+cot_v = c_val / s_val if not np.isclose(s_val, 0, atol=1e-4) else np.nan
+st.caption(f"{T['rad_eq']} {rad_libre:.4f} rad ({rad_libre/np.pi:.2f} π)")
+m1, m2, m3 = st.columns(3)
+m1.metric(T["cos"], f"{c_val:.4f}")
+m2.metric(T["sin"], f"{s_val:.4f}")
+m3.metric(T["tan"], f"{t_val:.4f}" if not np.isnan(t_val) else T["inf"])
+m4, m5, m6 = st.columns(3)
+m4.metric(T["sec"], f"{sec_v:.4f}" if not np.isnan(sec_v) else T["inf"])
+m5.metric(T["csc"], f"{csc_v:.4f}" if not np.isnan(csc_v) else T["inf"])
+m6.metric(T["cot"], f"{cot_v:.4f}" if not np.isnan(cot_v) else T["inf"])
 with col_calc_right:
-    fig_circle = go.Figure()
-    
-    fig_circle.add_trace(go.Scatter(x=np.cos(theta_c), y=np.sin(theta_c), mode="lines",
-                                    line=dict(color="#8b949e", width=2), name="Unit Circle (R=1)"))
-    fig_circle.add_trace(go.Scatter(x=[0, c_val], y=[0, s_val], mode="lines+markers",
-                                    line=dict(color="#f0883e", width=3), marker=dict(size=10), name=f"Radius ({angulo_libre}°)"))
-    fig_circle.add_trace(go.Scatter(x=[0, c_val], y=[0, 0], mode="lines",
-                                    line=dict(color="#58a6ff", width=4), name="Cosine Shadow (X)"))
-    fig_circle.add_trace(go.Scatter(x=[c_val, c_val], y=[0, s_val], mode="lines",
-                                    line=dict(color="#3fb950", width=4, dash="dot"), name="Sine Shadow (Y)"))
-
-    fig_circle.update_xaxes(range=[-1.3, 1.3], fixedrange=True, zeroline=True, zerolinecolor="#30363d")
-    fig_circle.update_yaxes(range=[-1.3, 1.3], fixedrange=True, scaleanchor="x", scaleratio=1, zeroline=True, zerolinecolor="#30363d")
-    fig_circle.update_layout(template="plotly_dark", height=360, margin=dict(l=10, r=10, t=10, b=10))
-    
-    st.plotly_chart(fig_circle, use_container_width=True)
-
+theta_c = np.linspace(0, 2 * np.pi, 200)
+fig_circle = go.Figure()
+fig_circle.add_trace(go.Scatter(x=np.cos(theta_c), y=np.sin(theta_c), mode="lines",
+line=dict(color="#8b949e", width=2), name="Unit Circle (R=1)"))
+fig_circle.add_trace(go.Scatter(x=[0, c_val], y=[0, s_val], mode="lines+markers",
+line=dict(color="#f0883e", width=3), marker=dict(size=10), name=f"{angulo_libre}°"))
+fig_circle.add_trace(go.Scatter(x=[0, c_val], y=[0, 0], mode="lines",
+line=dict(color="#58a6ff", width=4), name=T["cos"]))
+fig_circle.add_trace(go.Scatter(x=[c_val, c_val], y=[0, s_val], mode="lines",
+line=dict(color="#3fb950", width=4, dash="dot"), name=T["sin"]))
+fig_circle.update_xaxes(range=[-1.3, 1.3], fixedrange=True, zeroline=True, zerolinecolor="#30363d")
+fig_circle.update_yaxes(range=[-1.3, 1.3], fixedrange=True, scaleanchor="x", scaleratio=1, zeroline=True, zerolinecolor="#30363d")
+fig_circle.update_layout(template="plotly_dark", height=360, margin=dict(l=10, r=10, t=10, b=10))
+st.plotly_chart(fig_circle, use_container_width=True)
