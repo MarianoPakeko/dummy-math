@@ -3,18 +3,23 @@
 <head>
 <style>
   body { margin: 0; background-color: #0e1117; font-family: sans-serif; color: white; overflow: hidden; }
-  .toolbar { padding: 6px 12px; background: #161b22; border-radius: 8px; margin-bottom: 8px; border: 1px solid #30363d; display: flex; gap: 10px; align-items: center; }
-  button { background-color: #238636; color: white; border: none; padding: 6px 16px; font-size: 14px; font-weight: 600; border-radius: 6px; cursor: pointer; }
+  .toolbar { padding: 6px 12px; background: #161b22; border-radius: 8px; margin-bottom: 8px; border: 1px solid #30363d; display: flex; gap: 8px; align-items: center; }
+  button { background-color: #238636; color: white; border: none; padding: 6px 14px; font-size: 13px; font-weight: 600; border-radius: 6px; cursor: pointer; }
   button.paused { background-color: #d29922; }
-  button.rotate-btn { background-color: #1f6feb; }
-  button.rotate-btn.active { background-color: #8957e5; }
+  .vbtn { background-color: #21262d; border: 1px solid #30363d; color: #c9d1d9; }
+  .vbtn.s { background-color: #238636; border-color: #3fb950; color: white; }
+  .vbtn.c { background-color: #1f6feb; border-color: #58a6ff; color: white; }
+  .vbtn.t { background-color: #da3633; border-color: #f85149; color: white; }
   canvas { display: block; width: 100%; height: 340px; background-color: #0e1117; border-radius: 8px; border: 1px solid #21262d; }
 </style>
 </head>
 <body>
   <div class="toolbar">
     <button id="toggleBtn" onclick="togglePlay()">__BTN_PAUSE__</button>
-    <button id="rotateBtn" class="rotate-btn" onclick="toggleAxis()">🔄 Rotar Eje 90° (Vista Coseno)</button>
+    <span style="color:#30363d;">|</span>
+    <button id="bSin" class="vbtn s" onclick="setView('sin')">🟢 Vista Seno</button>
+    <button id="bCos" class="vbtn" onclick="setView('cos')">🔵 Vista Coseno</button>
+    <button id="bTan" class="vbtn" onclick="setView('tan')">🔴 Vista Tangente</button>
   </div>
   <canvas id="trigCanvas"></canvas>
 
@@ -22,10 +27,9 @@
     const canvas = document.getElementById('trigCanvas');
     const ctx = canvas.getContext('2d');
     const btn = document.getElementById('toggleBtn');
-    const rotBtn = document.getElementById('rotateBtn');
 
     let isPlaying = true;
-    let isRotated = false; // false = Vista Seno/Tan (0°), true = Vista Coseno (90°)
+    let view = 'sin';
     let angle = 0;
 
     const active = __ACTIVE_JSON__;
@@ -36,10 +40,11 @@
       btn.classList.toggle("paused", !isPlaying);
     }
 
-    function toggleAxis() {
-      isRotated = !isRotated;
-      rotBtn.classList.toggle("active", isRotated);
-      rotBtn.innerText = isRotated ? "🔄 Vista Rotada 90° (Coseno Vertical)" : "🔄 Rotar Eje 90° (Vista Coseno)";
+    function setView(v) {
+      view = v;
+      document.getElementById('bSin').className = 'vbtn' + (v === 'sin' ? ' s' : '');
+      document.getElementById('bCos').className = 'vbtn' + (v === 'cos' ? ' c' : '');
+      document.getElementById('bTan').className = 'vbtn' + (v === 'tan' ? ' t' : '');
     }
 
     function resize() {
@@ -50,17 +55,13 @@
     window.addEventListener('resize', resize);
     resize();
 
-    function drawWave(fn, color, isHighlighted, startX, width, centerY, scaleY, isDashed=false) {
+    function drawWave(fn, color, isHighlighted, startX, width, centerY, scaleY, isDashed) {
       ctx.save();
       ctx.beginPath();
       ctx.strokeStyle = color;
       ctx.globalAlpha = isHighlighted ? 1.0 : 0.12;
       ctx.lineWidth = isHighlighted ? 3.2 : 1.5;
-      if (isDashed) {
-        ctx.setLineDash([6, 4]);
-      } else {
-        ctx.setLineDash([]);
-      }
+      ctx.setLineDash(isDashed ? [5, 5] : []);
 
       let drawing = false;
       for (let px = 0; px <= width; px += 2) {
@@ -87,145 +88,115 @@
       const h = 340;
       ctx.clearRect(0, 0, w, h);
 
-      const circleX = Math.min(150, w * 0.22);
-      const centerY = h / 2;
-      const radius = 85;
-      const waveStartX = circleX + radius + 65;
-      const waveWidth = w - waveStartX - 20;
+      const cx0 = Math.min(150, w * 0.22);
+      const cy0 = h / 2;
+      const r = 85;
+      const wsx = cx0 + r + 65;
+      const ww = w - wsx - 20;
 
-      // Ejes del círculo
+      // Ejes base y círculo unitario
       ctx.save();
       ctx.setLineDash([]);
       ctx.strokeStyle = '#30363d';
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(circleX - radius - 15, centerY);
-      ctx.lineTo(circleX + radius + 15, centerY);
-      ctx.moveTo(circleX, centerY - radius - 15);
-      ctx.lineTo(circleX, centerY + radius + 15);
+      ctx.moveTo(cx0 - r - 15, cy0); ctx.lineTo(cx0 + r + 15, cy0);
+      ctx.moveTo(cx0, cy0 - r - 15); ctx.lineTo(cx0, cy0 + r + 15);
+      ctx.moveTo(wsx, cy0); ctx.lineTo(w - 20, cy0);
       ctx.stroke();
 
-      // Círculo Unitario único
       ctx.strokeStyle = '#8b949e';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(circleX, centerY, radius, 0, 2 * Math.PI);
+      ctx.arc(cx0, cy0, r, 0, 2 * Math.PI);
       ctx.stroke();
       ctx.restore();
 
-      // Líneas límite [-1, 1]
+      // Límites [-1, 1]
       ctx.save();
       ctx.strokeStyle = '#8b949e';
       ctx.globalAlpha = 0.3;
       ctx.setLineDash([4, 4]);
       ctx.beginPath();
-      ctx.moveTo(waveStartX, centerY - radius);
-      ctx.lineTo(w - 20, centerY - radius);
-      ctx.moveTo(waveStartX, centerY + radius);
-      ctx.lineTo(w - 20, centerY + radius);
+      ctx.moveTo(wsx, cy0 - r); ctx.lineTo(w - 20, cy0 - r);
+      ctx.moveTo(wsx, cy0 + r); ctx.lineTo(w - 20, cy0 + r);
       ctx.stroke();
       ctx.restore();
 
-      // Eje central de ondas
-      ctx.save();
-      ctx.setLineDash([]);
-      ctx.strokeStyle = '#30363d';
-      ctx.beginPath();
-      ctx.moveTo(waveStartX, centerY);
-      ctx.lineTo(w - 20, centerY);
-      ctx.stroke();
-      ctx.restore();
+      const sinV = Math.sin(angle);
+      const cosV = Math.cos(angle);
+      const tanV = Math.tan(angle);
 
-      const sinVal = Math.sin(angle);
-      const cosVal = Math.cos(angle);
-      const tanVal = Math.tan(angle);
+      const isCos = (view === 'cos');
+      const px = isCos ? (cx0 + sinV * r) : (cx0 + cosV * r);
+      const py = isCos ? (cy0 - cosV * r) : (cy0 - sinV * r);
 
-      // Coordenadas del punto según la rotación del eje
-      // Normal (0°): X = cos, Y = sin
-      // Rotado (90°): X = sin, Y = cos (pone el Coseno en vertical para proyectar línea recta)
-      const px = isRotated ? (circleX + sinVal * radius) : (circleX + cosVal * radius);
-      const py = isRotated ? (centerY - cosVal * radius) : (centerY - sinVal * radius);
+      // 1. Vista Seno
+      if (view === 'sin') {
+        ctx.save();
+        ctx.setLineDash([]);
+        ctx.strokeStyle = '#3fb950';
+        ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(px, cy0); ctx.lineTo(px, py); ctx.stroke();
 
-      // Sombra Coseno (Azul)
-      ctx.save();
-      ctx.setLineDash([]);
-      ctx.strokeStyle = '#58a6ff';
-      ctx.globalAlpha = active.cos ? 1.0 : 0.15;
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      if (!isRotated) {
-        ctx.moveTo(circleX, centerY);
-        ctx.lineTo(px, centerY);
-      } else {
-        ctx.moveTo(px, centerY);
-        ctx.lineTo(px, py);
+        ctx.setLineDash([5, 5]);
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(wsx, py); ctx.stroke();
+
+        ctx.fillStyle = '#3fb950';
+        ctx.beginPath(); ctx.arc(wsx, py, 5, 0, 2 * Math.PI); ctx.fill();
+        ctx.restore();
       }
-      ctx.stroke();
-      ctx.restore();
 
-      // Sombra Seno (Verde)
-      ctx.save();
-      ctx.setLineDash([]);
-      ctx.strokeStyle = '#3fb950';
-      ctx.globalAlpha = active.sin ? 1.0 : 0.15;
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      if (!isRotated) {
-        ctx.moveTo(px, centerY);
-        ctx.lineTo(px, py);
-      } else {
-        ctx.moveTo(circleX, centerY);
-        ctx.lineTo(px, centerY);
+      // 2. Vista Coseno
+      if (view === 'cos') {
+        ctx.save();
+        ctx.setLineDash([]);
+        ctx.strokeStyle = '#58a6ff';
+        ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(px, cy0); ctx.lineTo(px, py); ctx.stroke();
+
+        ctx.setLineDash([5, 5]);
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(wsx, py); ctx.stroke();
+
+        ctx.fillStyle = '#58a6ff';
+        ctx.beginPath(); ctx.arc(wsx, py, 5, 0, 2 * Math.PI); ctx.fill();
+        ctx.restore();
       }
-      ctx.stroke();
-      ctx.restore();
 
-      // Pared y línea de Tangente (solo en vista estándar 0° donde la pared es vertical)
-      if (!isRotated && active.tan) {
+      // 3. Vista Tangente
+      if (view === 'tan') {
         ctx.save();
         ctx.strokeStyle = '#f85149';
         ctx.globalAlpha = 0.35;
         ctx.setLineDash([4, 4]);
         ctx.beginPath();
-        ctx.moveTo(circleX + radius, centerY - radius * 2.2);
-        ctx.lineTo(circleX + radius, centerY + radius * 2.2);
+        ctx.moveTo(cx0 + r, cy0 - r * 2.2);
+        ctx.lineTo(cx0 + r, cy0 + r * 2.2);
         ctx.stroke();
         ctx.restore();
 
-        if (Math.abs(tanVal) <= 2.5) {
-          const tanWallY = centerY - tanVal * radius;
+        if (Math.abs(tanV) <= 2.5) {
+          const ty = cy0 - tanV * r;
           ctx.save();
           ctx.strokeStyle = '#f0883e';
           ctx.globalAlpha = 0.45;
           ctx.setLineDash([3, 3]);
-          ctx.beginPath();
-          ctx.moveTo(circleX, centerY);
-          ctx.lineTo(circleX + radius, tanWallY);
-          ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(cx0 + r, ty); ctx.stroke();
 
           ctx.strokeStyle = '#f85149';
           ctx.globalAlpha = 1.0;
           ctx.setLineDash([]);
           ctx.lineWidth = 4;
-          ctx.beginPath();
-          ctx.moveTo(circleX + radius, centerY);
-          ctx.lineTo(circleX + radius, tanWallY);
-          ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(cx0 + r, cy0); ctx.lineTo(cx0 + r, ty); ctx.stroke();
 
-          // Línea recta conectora desde la pared tangente hacia la onda roja
-          ctx.strokeStyle = '#f85149';
-          ctx.globalAlpha = 0.85;
-          ctx.setLineDash([5, 4]);
+          ctx.setLineDash([5, 5]);
           ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.moveTo(circleX + radius, tanWallY);
-          ctx.lineTo(waveStartX, tanWallY);
-          ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(cx0 + r, ty); ctx.lineTo(wsx, ty); ctx.stroke();
 
           ctx.fillStyle = '#f85149';
-          ctx.beginPath();
-          ctx.arc(waveStartX, tanWallY, 4.5, 0, 2 * Math.PI);
-          ctx.fill();
+          ctx.beginPath(); ctx.arc(wsx, ty, 5, 0, 2 * Math.PI); ctx.fill();
           ctx.restore();
         }
       }
@@ -235,69 +206,28 @@
       ctx.setLineDash([]);
       ctx.strokeStyle = '#f0883e';
       ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(circleX, centerY);
-      ctx.lineTo(px, py);
-      ctx.stroke();
-
+      ctx.beginPath(); ctx.moveTo(cx0, cy0); ctx.lineTo(px, py); ctx.stroke();
       ctx.fillStyle = '#f0883e';
-      ctx.beginPath();
-      ctx.arc(px, py, 5, 0, 2 * Math.PI);
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(px, py, 5, 0, 2 * Math.PI); ctx.fill();
       ctx.restore();
 
-      // Conector recto hacia las ondas según el eje activo
-      if (!isRotated && active.sin) {
-        ctx.save();
-        ctx.strokeStyle = '#3fb950';
-        ctx.globalAlpha = 0.75;
-        ctx.setLineDash([5, 4]);
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(px, py);
-        ctx.lineTo(waveStartX, py);
-        ctx.stroke();
-        ctx.fillStyle = '#3fb950';
-        ctx.beginPath();
-        ctx.arc(waveStartX, py, 4.5, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.restore();
-      }
-
-      if (isRotated && active.cos) {
-        ctx.save();
-        ctx.strokeStyle = '#58a6ff';
-        ctx.globalAlpha = 0.75;
-        ctx.setLineDash([5, 4]);
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(px, py);
-        ctx.lineTo(waveStartX, py);
-        ctx.stroke();
-        ctx.fillStyle = '#58a6ff';
-        ctx.beginPath();
-        ctx.arc(waveStartX, py, 4.5, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.restore();
-      }
-
       // Dibujar las 6 ondas
-      if (waveWidth > 50) {
-        drawWave(t => Math.sin(t), '#3fb950', active.sin, waveStartX, waveWidth, centerY, radius);
-        drawWave(t => Math.cos(t), '#58a6ff', active.cos, waveStartX, waveWidth, centerY, radius);
-        drawWave(t => Math.tan(t), '#f85149', active.tan, waveStartX, waveWidth, centerY, radius, true);
-        drawWave(t => 1 / Math.sin(t), '#56d364', active.csc, waveStartX, waveWidth, centerY, radius, true);
-        drawWave(t => 1 / Math.cos(t), '#79c0ff', active.sec, waveStartX, waveWidth, centerY, radius, true);
-        drawWave(t => Math.cos(t) / Math.sin(t), '#d2a8ff', active.cot, waveStartX, waveWidth, centerY, radius, true);
+      if (ww > 50) {
+        drawWave(t => Math.sin(t), '#3fb950', active.sin, wsx, ww, cy0, r, false);
+        drawWave(t => Math.cos(t), '#58a6ff', active.cos, wsx, ww, cy0, r, false);
+        drawWave(t => Math.tan(t), '#f85149', active.tan, wsx, ww, cy0, r, true);
+        drawWave(t => 1 / Math.sin(t), '#56d364', active.csc, wsx, ww, cy0, r, true);
+        drawWave(t => 1 / Math.cos(t), '#79c0ff', active.sec, wsx, ww, cy0, r, true);
+        drawWave(t => Math.cos(t) / Math.sin(t), '#d2a8ff', active.cot, wsx, ww, cy0, r, true);
       }
 
       if (isPlaying) {
         angle += 0.025;
       }
-      requestAnimationFrame(animate);
+      requestAnimationFrame(loop);
     }
 
-    animate();
+    loop();
   </script>
 </body>
 </html>
