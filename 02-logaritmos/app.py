@@ -1,132 +1,86 @@
-<!DOCTYPE html>
-<html>
-<head>
-<style>
-  body { margin: 0; background-color: #0e1117; font-family: sans-serif; color: white; overflow: hidden; }
-  .toolbar { padding: 6px 12px; background: #161b22; border-radius: 8px; margin-bottom: 8px; border: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center; }
-  button { background-color: #238636; color: white; border: none; padding: 6px 14px; font-size: 13px; font-weight: 600; border-radius: 6px; cursor: pointer; }
-  button.paused { background-color: #d29922; }
-  .legend { font-size: 13px; display: flex; gap: 15px; }
-  canvas { display: block; width: 100%; height: 280px; background-color: #0e1117; border-radius: 8px; border: 1px solid #21262d; }
-</style>
-</head>
-<body>
-  <div class="toolbar">
-    <button id="pBtn" onclick="togglePlay()">__BTN_PAUSE__</button>
-    <div class="legend">
-      <span style="color:#f85149;">🔴 Exponential (y = 2ˣ)</span>
-      <span style="color:#8b949e;">⚪ Mirror (y = x)</span>
-      <span style="color:#3fb950;">🟢 Logarithm (y = log₂ x)</span>
-    </div>
-  </div>
-  <canvas id="logCanvas"></canvas>
+from pathlib import Path
+import numpy as np
+import plotly.graph_objects as go
+import streamlit as st
+import streamlit.components.v1 as components
+from textos import TEXTOS
 
-  <script>
-    const cv = document.getElementById('logCanvas');
-    const ctx = cv.getContext('2d');
-    let playing = true;
-    let progress = 0;
+st.set_page_config(page_title="Dummy Math | Logarithms", layout="wide")
 
-    function togglePlay() {
-      playing = !playing;
-      const b = document.getElementById('pBtn');
-      b.innerText = playing ? "__BTN_PAUSE__" : "__BTN_PLAY__";
-      b.classList.toggle("paused", !playing);
-    }
+col_t, col_lang = st.columns([0.85, 0.15])
+with col_lang:
+    idioma = st.selectbox("🌐", ["Español", "English", "Italiano"], label_visibility="collapsed")
 
-    function animate() {
-      const w = cv.clientWidth || window.innerWidth || 800;
-      const h = 280;
-      if (cv.width !== w || cv.height !== h) {
-        cv.width = w;
-        cv.height = h;
-      }
-      ctx.clearRect(0, 0, w, h);
+T = TEXTOS[idioma]
+with col_t:
+    st.title(T["title"])
 
-      const ox = 60;
-      const oy = h - 40;
-      const scale = 28;
+with st.expander(T["exp_title"], expanded=False):
+    st.markdown(T["defs"])
 
-      // Ejes X e Y
-      ctx.strokeStyle = '#30363d';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(ox, 15); ctx.lineTo(ox, oy + 15);
-      ctx.moveTo(ox - 15, oy); ctx.lineTo(w - 20, oy);
-      ctx.stroke();
+# ==========================================
+# SECCIÓN 1: ANIMACIÓN ESPEJO (EXPONENCIAL VS LOGARITMO)
+# ==========================================
+st.subheader(T["sec1"])
+ruta_html = Path(__file__).parent / "animacion.html"
+html_code = ruta_html.read_text(encoding="utf-8")
+html_code = html_code.replace("__BTN_PAUSE__", T["pause"]).replace("__BTN_PLAY__", T["play"])
+components.html(html_code, height=340)
 
-      // Línea espejo y = x
-      ctx.save();
-      ctx.strokeStyle = '#8b949e';
-      ctx.globalAlpha = 0.25;
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(ox, oy);
-      ctx.lineTo(ox + 8 * scale, oy - 8 * scale);
-      ctx.stroke();
-      ctx.restore();
+st.divider()
 
-      // Curva Exponencial (2^x) en Rojo
-      ctx.strokeStyle = '#f85149';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      for (let x = 0; x <= 3.1; x += 0.05) {
-        const y = Math.pow(2, x);
-        const px = ox + x * scale;
-        const py = oy - y * scale;
-        if (x === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-      }
-      ctx.stroke();
+# ==========================================
+# SECCIÓN 2: EL COMPRESOR DE GIGANTES (ESCALA LINEAL VS LOG)
+# ==========================================
+st.subheader(T["sec2"])
+st.caption(T["desc2"])
 
-      // Curva Logarítmica (log2(x)) en Verde
-      ctx.strokeStyle = '#3fb950';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      for (let x = 0.15; x <= 8.5; x += 0.05) {
-        const y = Math.log2(x);
-        const px = ox + x * scale;
-        const py = oy - y * scale;
-        if (x === 0.15) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-      }
-      ctx.stroke();
+usar_log = st.toggle(T["toggle_log"], value=False)
 
-      // Puntos sincronizados recorriendo ambas curvas
-      const tVal = (Math.sin(progress) + 1) * 1.5; // Oscila suavemente entre 0 y 3
-      const expY = Math.pow(2, tVal);
+categorias = ["User A", "User B", "User C", "User D", "User E", "Viral Giant"]
+valores = [15, 45, 120, 350, 900, 10000000]
 
-      // Punto en Exponencial (tVal, 2^tVal)
-      const ePx = ox + tVal * scale;
-      const ePy = oy - expY * scale;
+fig_bar = go.Figure()
+fig_bar.add_trace(go.Bar(
+    x=categorias,
+    y=valores,
+    text=[f"{v:,}" for v in valores],
+    textposition="outside",
+    marker_color=["#58a6ff", "#58a6ff", "#58a6ff", "#58a6ff", "#58a6ff", "#f85149"]
+))
 
-      // Punto espejo en Logaritmo (2^tVal, tVal)
-      const lPx = ox + expY * scale;
-      const lPy = oy - tVal * scale;
+fig_bar.update_layout(
+    template="plotly_dark",
+    height=380,
+    yaxis_type="log" if usar_log else "linear",
+    yaxis_title="Logarithmic Scale (Powers of 10)" if usar_log else "Linear Scale (Raw Numbers)",
+    margin=dict(l=20, r=20, t=30, b=20)
+)
+st.plotly_chart(fig_bar, use_container_width=True)
 
-      // Línea conectora entre ambos mundos
-      ctx.save();
-      ctx.strokeStyle = '#f0883e';
-      ctx.globalAlpha = 0.45;
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(ePx, ePy);
-      ctx.lineTo(lPx, lPy);
-      ctx.stroke();
-      ctx.restore();
+st.divider()
 
-      // Dibujar bolitas
-      ctx.fillStyle = '#f85149';
-      ctx.beginPath(); ctx.arc(ePx, ePy, 6, 0, 2 * Math.PI); ctx.fill();
+# ==========================================
+# SECCIÓN 3: CALCULADORA DE PASOS (CUALQUIER NÚMERO)
+# ==========================================
+st.subheader(T["sec3"])
 
-      ctx.fillStyle = '#3fb950';
-      ctx.beginPath(); ctx.arc(lPx, lPy, 6, 0, 2 * Math.PI); ctx.fill();
+col_c1, col_c2 = st.columns([1.1, 1.3])
 
-      if (playing) progress += 0.025;
-      requestAnimationFrame(animate);
-    }
+with col_c1:
+    numero = st.number_input(T["input_num"], min_value=0.0001, value=1000.0, step=100.0, format="%.2f")
+    base_opcion = st.radio(T["select_base"], ["Base 10 (Standard)", "Base 2 (Binary / Bits)", "Base e (Natural ~2.718)"], horizontal=True)
 
-    animate();
-  </script>
-</body>
-</html>
+with col_c2:
+    if "10" in base_opcion:
+        pasos = np.log10(numero)
+        base_str = "10"
+    elif "2" in base_opcion:
+        pasos = np.log2(numero)
+        base_str = "2"
+    else:
+        pasos = np.log(numero)
+        base_str = "e"
+
+    st.metric(T["res_steps"], f"{pasos:.4f}")
+    st.info(f"🔄 **{T['res_exp']}** ${base_str}^{{{pasos:.4f}}} = {numero:,.2f}$")
