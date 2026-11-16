@@ -13,41 +13,32 @@ st.info(
 )
 
 # ==========================================
-# SECCIÓN 1: BANNER SINCRONIZADO (CÍRCULO + ONDAS EN MOVIMIENTO)
+# SECCIÓN 1: BANNER SINCRONIZADO CON SELECCIÓN MÚLTIPLE
 # ==========================================
 st.subheader("🌊 1. Synchronized Circle & Wave Banner")
+st.caption("Toggle one or more functions below to highlight them simultaneously:")
 
-# Botones horizontales directos (sin menús desplegables)
-opciones_botones = [
-    "All Equal",
-    "Sine (sin)",
-    "Cosine (cos)",
-    "Tangent (tan)",
-    "Cosecant (1/sin)",
-    "Secant (1/cos)",
-    "Cotangent (1/tan)"
-]
+# Fila de 6 interruptores independientes para selección múltiple inmediata
+c1, c2, c3, c4, c5, c6 = st.columns(6)
+hi_sin = c1.toggle("🟢 Sine (sin)", value=True)
+hi_cos = c2.toggle("🔵 Cosine (cos)", value=True)
+hi_tan = c3.toggle("🔴 Tangent (tan)", value=False)
+hi_csc = c4.toggle("🟩 Cosecant (1/sin)", value=False)
+hi_sec = c5.toggle("🟦 Secant (1/cos)", value=False)
+hi_cot = c6.toggle("🟣 Cotangent (1/tan)", value=False)
 
-foco = st.radio(
-    "Select function to highlight:",
-    options=opciones_botones,
-    horizontal=True,
-    index=0
-)
+# Si el usuario apaga todos, mantenemos todos visibles tenues para no dejar el gráfico vacío
+def get_style(is_active, base_w=2.5):
+    if is_active:
+        return 1.0, base_w + 1.2
+    return 0.12, base_w - 0.5
 
-mostrar_rec = st.checkbox("Show Reciprocal Waves (Secant, Cosecant, Cotangent)", value=True)
-
-def get_style(name, base_w=2.5):
-    if foco == "All Equal":
-        return 1.0, base_w
-    return (1.0, base_w + 2.2) if foco == name else (0.12, base_w)
-
-op_sin, lw_sin = get_style("Sine (sin)")
-op_cos, lw_cos = get_style("Cosine (cos)")
-op_tan, lw_tan = get_style("Tangent (tan)", 2.0)
-op_csc, lw_csc = get_style("Cosecant (1/sin)", 2.0)
-op_sec, lw_sec = get_style("Secant (1/cos)", 2.0)
-op_cot, lw_cot = get_style("Cotangent (1/tan)", 2.0)
+op_sin, lw_sin = get_style(hi_sin)
+op_cos, lw_cos = get_style(hi_cos)
+op_tan, lw_tan = get_style(hi_tan, 2.2)
+op_csc, lw_csc = get_style(hi_csc, 2.2)
+op_sec, lw_sec = get_style(hi_sec, 2.2)
+op_cot, lw_cot = get_style(hi_cot, 2.2)
 
 def clean_inf(arr, limit=3.2):
     c = arr.copy()
@@ -58,7 +49,6 @@ def clean_inf(arr, limit=3.2):
 x_banner = np.linspace(0, 4 * np.pi, 240)
 
 def calcular_ondas(fase):
-    # La onda nace en x=0 con el valor exacto del ángulo 'fase' del círculo
     s = np.sin(fase - x_banner)
     c = np.cos(fase - x_banner)
     t = clean_inf(np.tan(fase - x_banner))
@@ -67,7 +57,7 @@ def calcular_ondas(fase):
     cot = clean_inf(c / np.where(np.isclose(s, 0, atol=1e-2), np.nan, s))
     return s, c, t, csc, sec, cot
 
-# Crear figura doble sincronizada: Círculo a la izquierda, Ondas a la derecha
+# Figura doble sincronizada
 fig_banner = make_subplots(
     rows=1, cols=2,
     column_widths=[0.28, 0.72],
@@ -80,7 +70,7 @@ theta_c = np.linspace(0, 2 * np.pi, 150)
 fig_banner.add_trace(go.Scatter(x=np.cos(theta_c), y=np.sin(theta_c), mode="lines",
                                 line=dict(color="#8b949e", width=2), showlegend=False), row=1, col=1)
 
-# Estado inicial (fase = 0)
+# Estado inicial
 s0, c0, t0, csc0, sec0, cot0 = calcular_ondas(0)
 
 # Trazos dinámicos del círculo (Trazos 1, 2, 3)
@@ -91,24 +81,21 @@ fig_banner.add_trace(go.Scatter(x=[0, 1], y=[0, 0], mode="lines",
 fig_banner.add_trace(go.Scatter(x=[1, 1], y=[0, 0], mode="lines",
                                 line=dict(color="#3fb950", width=lw_sin + 1.5, dash="dot"), opacity=op_sin, showlegend=False), row=1, col=1)
 
-# Trazos dinámicos de las ondas (Trazos 4, 5, 6 y opcionales 7, 8, 9)
+# Trazos dinámicos de las 6 ondas (Trazos 4, 5, 6, 7, 8, 9)
 fig_banner.add_trace(go.Scatter(x=x_banner, y=s0, mode="lines", line=dict(color="#3fb950", width=lw_sin), opacity=op_sin, name="Sine (sin)"), row=1, col=2)
 fig_banner.add_trace(go.Scatter(x=x_banner, y=c0, mode="lines", line=dict(color="#58a6ff", width=lw_cos), opacity=op_cos, name="Cosine (cos)"), row=1, col=2)
 fig_banner.add_trace(go.Scatter(x=x_banner, y=t0, mode="lines", line=dict(color="#f85149", width=lw_tan, dash="dash"), opacity=op_tan, name="Tangent (tan)"), row=1, col=2)
+fig_banner.add_trace(go.Scatter(x=x_banner, y=csc0, mode="lines", line=dict(color="#56d364", width=lw_csc, dash="dot"), opacity=op_csc, name="Cosecant (1/sin)"), row=1, col=2)
+fig_banner.add_trace(go.Scatter(x=x_banner, y=sec0, mode="lines", line=dict(color="#79c0ff", width=lw_sec, dash="dot"), opacity=op_sec, name="Secant (1/cos)"), row=1, col=2)
+fig_banner.add_trace(go.Scatter(x=x_banner, y=cot0, mode="lines", line=dict(color="#d2a8ff", width=lw_cot, dash="dashdot"), opacity=op_cot, name="Cotangent (1/tan)"), row=1, col=2)
 
-indices_animados = [1, 2, 3, 4, 5, 6]
+indices_animados = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
-if mostrar_rec:
-    fig_banner.add_trace(go.Scatter(x=x_banner, y=csc0, mode="lines", line=dict(color="#56d364", width=lw_csc, dash="dot"), opacity=op_csc, name="Cosecant (1/sin)"), row=1, col=2)
-    fig_banner.add_trace(go.Scatter(x=x_banner, y=sec0, mode="lines", line=dict(color="#79c0ff", width=lw_sec, dash="dot"), opacity=op_sec, name="Secant (1/cos)"), row=1, col=2)
-    fig_banner.add_trace(go.Scatter(x=x_banner, y=cot0, mode="lines", line=dict(color="#d2a8ff", width=lw_cot, dash="dashdot"), opacity=op_cot, name="Cotangent (1/tan)"), row=1, col=2)
-    indices_animados.extend([7, 8, 9])
-
-# Líneas límite [-1, 1] en el panel de ondas
+# Líneas límite [-1, 1]
 fig_banner.add_hline(y=1, line_width=1, line_dash="dot", line_color="#8b949e", opacity=0.4, row=1, col=2)
 fig_banner.add_hline(y=-1, line_width=1, line_dash="dot", line_color="#8b949e", opacity=0.4, row=1, col=2)
 
-# Generar 60 frames sincronizados (el círculo gira y empuja las ondas en tiempo real)
+# Generar 60 frames sincronizados
 frames = []
 fases = np.linspace(0, 2 * np.pi, 60, endpoint=False)
 for idx, f in enumerate(fases):
@@ -116,24 +103,21 @@ for idx, f in enumerate(fases):
     sf, cf, tf, cscf, secf, cotf = calcular_ondas(f)
     
     frame_data = [
-        go.Scatter(x=[0, cx], y=[0, cy]),          # Radio girando
-        go.Scatter(x=[0, cx], y=[0, 0]),           # Sombra Coseno en círculo
-        go.Scatter(x=[cx, cx], y=[0, cy]),         # Sombra Seno en círculo
-        go.Scatter(y=sf),                          # Onda Seno
-        go.Scatter(y=cf),                          # Onda Coseno
-        go.Scatter(y=tf)                           # Onda Tangente
+        go.Scatter(x=[0, cx], y=[0, cy]),
+        go.Scatter(x=[0, cx], y=[0, 0]),
+        go.Scatter(x=[cx, cx], y=[0, cy]),
+        go.Scatter(y=sf),
+        go.Scatter(y=cf),
+        go.Scatter(y=tf),
+        go.Scatter(y=cscf),
+        go.Scatter(y=secf),
+        go.Scatter(y=cotf)
     ]
-    if mostrar_rec:
-        frame_data.extend([
-            go.Scatter(y=cscf),
-            go.Scatter(y=secf),
-            go.Scatter(y=cotf)
-        ])
     frames.append(go.Frame(data=frame_data, traces=indices_animados, name=str(idx)))
 
 fig_banner.frames = frames
 
-# Ejes fijos para evitar que el círculo o las ondas se deformen
+# Ejes fijos
 fig_banner.update_xaxes(range=[-1.25, 1.25], fixedrange=True, zeroline=True, zerolinecolor="#30363d", row=1, col=1)
 fig_banner.update_yaxes(range=[-1.25, 1.25], fixedrange=True, scaleanchor="x", scaleratio=1, zeroline=True, zerolinecolor="#30363d", row=1, col=1)
 
@@ -214,4 +198,3 @@ with col_calc_right:
     fig_circle.update_layout(template="plotly_dark", height=360, margin=dict(l=10, r=10, t=10, b=10))
     
     st.plotly_chart(fig_circle, use_container_width=True)
-
