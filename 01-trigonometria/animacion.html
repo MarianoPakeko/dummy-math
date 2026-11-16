@@ -47,14 +47,6 @@
       document.getElementById('bTan').className = 'vbtn' + (v === 'tan' ? ' t' : '');
     }
 
-    function resize() {
-      canvas.width = canvas.clientWidth * window.devicePixelRatio;
-      canvas.height = 340 * window.devicePixelRatio;
-      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-    }
-    window.addEventListener('resize', resize);
-    resize();
-
     function drawWave(fn, color, isHighlighted, startX, width, centerY, scaleY) {
       ctx.save();
       ctx.beginPath();
@@ -83,18 +75,23 @@
     }
 
     function animate() {
-      const w = canvas.clientWidth;
+      const w = canvas.clientWidth || window.innerWidth || 800;
       const h = 340;
+      
+      if (canvas.width !== w || canvas.height !== h) {
+        canvas.width = w;
+        canvas.height = h;
+      }
+
       ctx.clearRect(0, 0, w, h);
 
-      const cx0 = Math.min(150, w * 0.22);
+      const cx0 = Math.min(140, w * 0.22);
       const cy0 = h / 2;
-      const r = 85;
-      const wsx = cx0 + r + 65;
-      const ww = w - wsx - 20;
+      const r = 80;
+      const wsx = cx0 + r + 60;
+      const ww = Math.max(100, w - wsx - 20);
 
       // Ejes base y círculo unitario
-      ctx.save();
       ctx.strokeStyle = '#30363d';
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -108,7 +105,6 @@
       ctx.beginPath();
       ctx.arc(cx0, cy0, r, 0, 2 * Math.PI);
       ctx.stroke();
-      ctx.restore();
 
       // Límites [-1, 1]
       ctx.save();
@@ -170,12 +166,12 @@
         ctx.globalAlpha = 0.3;
         ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.moveTo(cx0 + r, cy0 - r * 2.2);
-        ctx.lineTo(cx0 + r, cy0 + r * 2.2);
+        ctx.moveTo(cx0 + r, cy0 - r * 2.1);
+        ctx.lineTo(cx0 + r, cy0 + r * 2.1);
         ctx.stroke();
         ctx.restore();
 
-        if (Math.abs(tanV) <= 2.5) {
+        if (Math.abs(tanV) <= 2.3) {
           const ty = cy0 - tanV * r;
           ctx.save();
           ctx.strokeStyle = '#f0883e';
@@ -209,22 +205,20 @@
       ctx.restore();
 
       // Dibujar las 6 ondas
-      if (ww > 50) {
-        drawWave(t => Math.sin(t), '#3fb950', active.sin, wsx, ww, cy0, r);
-        drawWave(t => Math.cos(t), '#58a6ff', active.cos, wsx, ww, cy0, r);
-        drawWave(t => Math.tan(t), '#f85149', active.tan, wsx, ww, cy0, r);
-        drawWave(t => 1 / Math.sin(t), '#56d364', active.csc, wsx, ww, cy0, r);
-        drawWave(t => 1 / Math.cos(t), '#79c0ff', active.sec, wsx, ww, cy0, r);
-        drawWave(t => Math.cos(t) / Math.sin(t), '#d2a8ff', active.cot, wsx, ww, cy0, r);
-      }
+      drawWave(t => Math.sin(t), '#3fb950', active.sin, wsx, ww, cy0, r);
+      drawWave(t => Math.cos(t), '#58a6ff', active.cos, wsx, ww, cy0, r);
+      drawWave(t => Math.tan(t), '#f85149', active.tan, wsx, ww, cy0, r);
+      drawWave(t => 1 / Math.sin(t), '#56d364', active.csc, wsx, ww, cy0, r);
+      drawWave(t => 1 / Math.cos(t), '#79c0ff', active.sec, wsx, ww, cy0, r);
+      drawWave(t => Math.cos(t) / Math.sin(t), '#d2a8ff', active.cot, wsx, ww, cy0, r);
 
       if (isPlaying) {
         angle += 0.025;
       }
-      requestAnimationFrame(loop);
+      requestAnimationFrame(animate);
     }
 
-    loop();
+    animate();
   </script>
 </body>
 </html>
