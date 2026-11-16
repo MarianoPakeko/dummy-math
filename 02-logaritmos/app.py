@@ -46,20 +46,21 @@ usar_log = (vista_idx == 1)
 DATASETS = {
     0: {  # Riqueza Global
         "labels": ["Student Savings", "Used Car", "Family Home", "Millionaire", "Tech Billionaire"],
-        "values":,
+        "values": [500.0, 8000.0, 180000.0, 5000000.0, 150000000000.0],
         "colors": ["#58a6ff", "#58a6ff", "#58a6ff", "#d29922", "#f85149"]
     },
     1: {  # Energía de Terremotos (Joules aproximados)
         "labels": ["Mag 2 (Unfelt)", "Mag 4 (Light)", "Mag 6 (Strong)", "Mag 8 (Great)", "Mag 9.5 (Valdivia)"],
-        "values":,
+        "values": [63000.0, 63000000.0, 63000000000.0, 63000000000000.0, 11000000000000000.0],
         "colors": ["#3fb950", "#58a6ff", "#d29922", "#f0883e", "#f85149"]
     },
     2: {  # Tamaños en el Universo (Metros)
         "labels": ["Human", "Skyscraper", "Mount Everest", "Planet Earth", "The Sun"],
-        "values": [1.7, 300, 8848, 12742000, 1392700000],
+        "values": [1.7, 300.0, 8848.0, 12742000.0, 1392700000.0],
         "colors": ["#3fb950", "#58a6ff", "#58a6ff", "#d29922", "#f85149"]
     }
 }
+
 
 data_actual = DATASETS[escenario_idx]
 
