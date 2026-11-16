@@ -1,7 +1,7 @@
-
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 st.set_page_config(page_title="Dummy Math | Chapter 01: Trigonometry", layout="wide")
 
@@ -13,25 +13,34 @@ st.info(
 )
 
 # ==========================================
-# SECCIÓN 1: BANNER DE ONDAS EN MOVIMIENTO CONTINUO
+# SECCIÓN 1: BANNER SINCRONIZADO (CÍRCULO + ONDAS EN MOVIMIENTO)
 # ==========================================
-st.subheader("🌊 1. Continuous Wave Banner (Oscilloscope View)")
+st.subheader("🌊 1. Synchronized Circle & Wave Banner")
 
-col_b1, col_b2 = st.columns([2, 1])
-with col_b1:
-    foco = st.selectbox(
-        "🔍 Highlight Wave Intensity:",
-        ["All Equal", "Sine (sin)", "Cosine (cos)", "Tangent (tan)", "Cosecant (1/sin)", "Secant (1/cos)", "Cotangent (1/tan)"]
-    )
-with col_b2:
-    st.write("")
-    st.write("")
-    mostrar_rec = st.checkbox("Include Reciprocals (sec, csc, cot)", value=True)
+# Botones horizontales directos (sin menús desplegables)
+opciones_botones = [
+    "All Equal",
+    "Sine (sin)",
+    "Cosine (cos)",
+    "Tangent (tan)",
+    "Cosecant (1/sin)",
+    "Secant (1/cos)",
+    "Cotangent (1/tan)"
+]
+
+foco = st.radio(
+    "Select function to highlight:",
+    options=opciones_botones,
+    horizontal=True,
+    index=0
+)
+
+mostrar_rec = st.checkbox("Show Reciprocal Waves (Secant, Cosecant, Cotangent)", value=True)
 
 def get_style(name, base_w=2.5):
     if foco == "All Equal":
         return 1.0, base_w
-    return (1.0, base_w + 2.2) if foco == name else (0.15, base_w)
+    return (1.0, base_w + 2.2) if foco == name else (0.12, base_w)
 
 op_sin, lw_sin = get_style("Sine (sin)")
 op_cos, lw_cos = get_style("Cosine (cos)")
@@ -40,50 +49,79 @@ op_csc, lw_csc = get_style("Cosecant (1/sin)", 2.0)
 op_sec, lw_sec = get_style("Secant (1/cos)", 2.0)
 op_cot, lw_cot = get_style("Cotangent (1/tan)", 2.0)
 
-def clean_inf(arr, limit=3.5):
+def clean_inf(arr, limit=3.2):
     c = arr.copy()
     c[np.abs(c) > limit] = np.nan
     return c
 
-# Eje X espacial para el banner (0 a 4*pi = 2 ciclos completos)
-x_banner = np.linspace(0, 4 * np.pi, 300)
+# Eje X para el banner de ondas (0 a 4*pi = 2 ciclos completos)
+x_banner = np.linspace(0, 4 * np.pi, 240)
 
 def calcular_ondas(fase):
-    s = np.sin(x_banner - fase)
-    c = np.cos(x_banner - fase)
-    t = clean_inf(np.tan(x_banner - fase))
+    # La onda nace en x=0 con el valor exacto del ángulo 'fase' del círculo
+    s = np.sin(fase - x_banner)
+    c = np.cos(fase - x_banner)
+    t = clean_inf(np.tan(fase - x_banner))
     csc = clean_inf(1.0 / np.where(np.isclose(s, 0, atol=1e-2), np.nan, s))
     sec = clean_inf(1.0 / np.where(np.isclose(c, 0, atol=1e-2), np.nan, c))
     cot = clean_inf(c / np.where(np.isclose(s, 0, atol=1e-2), np.nan, s))
     return s, c, t, csc, sec, cot
 
+# Crear figura doble sincronizada: Círculo a la izquierda, Ondas a la derecha
+fig_banner = make_subplots(
+    rows=1, cols=2,
+    column_widths=[0.28, 0.72],
+    horizontal_spacing=0.06,
+    subplot_titles=("Rotating Unit Circle", "Waves Flowing From Circle")
+)
+
+# 1. Círculo fijo de fondo (Trazo 0)
+theta_c = np.linspace(0, 2 * np.pi, 150)
+fig_banner.add_trace(go.Scatter(x=np.cos(theta_c), y=np.sin(theta_c), mode="lines",
+                                line=dict(color="#8b949e", width=2), showlegend=False), row=1, col=1)
+
+# Estado inicial (fase = 0)
 s0, c0, t0, csc0, sec0, cot0 = calcular_ondas(0)
 
-fig_banner = go.Figure()
+# Trazos dinámicos del círculo (Trazos 1, 2, 3)
+fig_banner.add_trace(go.Scatter(x=[0, 1], y=[0, 0], mode="lines+markers",
+                                line=dict(color="#f0883e", width=3), marker=dict(size=8), name="Radius"), row=1, col=1)
+fig_banner.add_trace(go.Scatter(x=[0, 1], y=[0, 0], mode="lines",
+                                line=dict(color="#58a6ff", width=lw_cos + 1.5), opacity=op_cos, showlegend=False), row=1, col=1)
+fig_banner.add_trace(go.Scatter(x=[1, 1], y=[0, 0], mode="lines",
+                                line=dict(color="#3fb950", width=lw_sin + 1.5, dash="dot"), opacity=op_sin, showlegend=False), row=1, col=1)
 
-# Líneas límite [-1, 1]
-fig_banner.add_hline(y=1, line_width=1, line_dash="dot", line_color="#8b949e", opacity=0.4)
-fig_banner.add_hline(y=-1, line_width=1, line_dash="dot", line_color="#8b949e", opacity=0.4)
+# Trazos dinámicos de las ondas (Trazos 4, 5, 6 y opcionales 7, 8, 9)
+fig_banner.add_trace(go.Scatter(x=x_banner, y=s0, mode="lines", line=dict(color="#3fb950", width=lw_sin), opacity=op_sin, name="Sine (sin)"), row=1, col=2)
+fig_banner.add_trace(go.Scatter(x=x_banner, y=c0, mode="lines", line=dict(color="#58a6ff", width=lw_cos), opacity=op_cos, name="Cosine (cos)"), row=1, col=2)
+fig_banner.add_trace(go.Scatter(x=x_banner, y=t0, mode="lines", line=dict(color="#f85149", width=lw_tan, dash="dash"), opacity=op_tan, name="Tangent (tan)"), row=1, col=2)
 
-# Trazos iniciales
-fig_banner.add_trace(go.Scatter(x=x_banner, y=s0, mode="lines", line=dict(color="#3fb950", width=lw_sin), opacity=op_sin, name="Sine (sin)"))
-fig_banner.add_trace(go.Scatter(x=x_banner, y=c0, mode="lines", line=dict(color="#58a6ff", width=lw_cos), opacity=op_cos, name="Cosine (cos)"))
-fig_banner.add_trace(go.Scatter(x=x_banner, y=t0, mode="lines", line=dict(color="#f85149", width=lw_tan, dash="dash"), opacity=op_tan, name="Tangent (tan)"))
+indices_animados = [1, 2, 3, 4, 5, 6]
 
 if mostrar_rec:
-    fig_banner.add_trace(go.Scatter(x=x_banner, y=csc0, mode="lines", line=dict(color="#56d364", width=lw_csc, dash="dot"), opacity=op_csc, name="Cosecant (1/sin)"))
-    fig_banner.add_trace(go.Scatter(x=x_banner, y=sec0, mode="lines", line=dict(color="#79c0ff", width=lw_sec, dash="dot"), opacity=op_sec, name="Secant (1/cos)"))
-    fig_banner.add_trace(go.Scatter(x=x_banner, y=cot0, mode="lines", line=dict(color="#d2a8ff", width=lw_cot, dash="dashdot"), opacity=op_cot, name="Cotangent (1/tan)"))
+    fig_banner.add_trace(go.Scatter(x=x_banner, y=csc0, mode="lines", line=dict(color="#56d364", width=lw_csc, dash="dot"), opacity=op_csc, name="Cosecant (1/sin)"), row=1, col=2)
+    fig_banner.add_trace(go.Scatter(x=x_banner, y=sec0, mode="lines", line=dict(color="#79c0ff", width=lw_sec, dash="dot"), opacity=op_sec, name="Secant (1/cos)"), row=1, col=2)
+    fig_banner.add_trace(go.Scatter(x=x_banner, y=cot0, mode="lines", line=dict(color="#d2a8ff", width=lw_cot, dash="dashdot"), opacity=op_cot, name="Cotangent (1/tan)"), row=1, col=2)
+    indices_animados.extend([7, 8, 9])
 
-# Generar 60 frames donde las ondas completas avanzan, suben y bajan suavemente
+# Líneas límite [-1, 1] en el panel de ondas
+fig_banner.add_hline(y=1, line_width=1, line_dash="dot", line_color="#8b949e", opacity=0.4, row=1, col=2)
+fig_banner.add_hline(y=-1, line_width=1, line_dash="dot", line_color="#8b949e", opacity=0.4, row=1, col=2)
+
+# Generar 60 frames sincronizados (el círculo gira y empuja las ondas en tiempo real)
 frames = []
 fases = np.linspace(0, 2 * np.pi, 60, endpoint=False)
 for idx, f in enumerate(fases):
+    cx, cy = np.cos(f), np.sin(f)
     sf, cf, tf, cscf, secf, cotf = calcular_ondas(f)
+    
     frame_data = [
-        go.Scatter(y=sf),
-        go.Scatter(y=cf),
-        go.Scatter(y=tf)
+        go.Scatter(x=[0, cx], y=[0, cy]),          # Radio girando
+        go.Scatter(x=[0, cx], y=[0, 0]),           # Sombra Coseno en círculo
+        go.Scatter(x=[cx, cx], y=[0, cy]),         # Sombra Seno en círculo
+        go.Scatter(y=sf),                          # Onda Seno
+        go.Scatter(y=cf),                          # Onda Coseno
+        go.Scatter(y=tf)                           # Onda Tangente
     ]
     if mostrar_rec:
         frame_data.extend([
@@ -91,29 +129,33 @@ for idx, f in enumerate(fases):
             go.Scatter(y=secf),
             go.Scatter(y=cotf)
         ])
-    frames.append(go.Frame(data=frame_data, name=str(idx)))
+    frames.append(go.Frame(data=frame_data, traces=indices_animados, name=str(idx)))
 
 fig_banner.frames = frames
+
+# Ejes fijos para evitar que el círculo o las ondas se deformen
+fig_banner.update_xaxes(range=[-1.25, 1.25], fixedrange=True, zeroline=True, zerolinecolor="#30363d", row=1, col=1)
+fig_banner.update_yaxes(range=[-1.25, 1.25], fixedrange=True, scaleanchor="x", scaleratio=1, zeroline=True, zerolinecolor="#30363d", row=1, col=1)
 
 fig_banner.update_xaxes(
     range=[0, 4 * np.pi],
     tickvals=[0, np.pi, 2*np.pi, 3*np.pi, 4*np.pi],
-    ticktext=["0", "π", "2π", "3π", "4π"],
-    fixedrange=True, showgrid=True, gridcolor="#21262d"
+    ticktext=["0 (Now)", "π", "2π", "3π", "4π"],
+    fixedrange=True, gridcolor="#21262d", row=1, col=2
 )
-fig_banner.update_yaxes(range=[-2.8, 2.8], fixedrange=True, zeroline=True, zerolinecolor="#30363d", gridcolor="#21262d")
+fig_banner.update_yaxes(range=[-2.5, 2.5], fixedrange=True, zeroline=True, zerolinecolor="#30363d", gridcolor="#21262d", row=1, col=2)
 
 fig_banner.update_layout(
     template="plotly_dark",
-    height=320,
-    margin=dict(l=20, r=20, t=40, b=20),
+    height=350,
+    margin=dict(l=20, r=20, t=45, b=20),
     updatemenus=[dict(
         type="buttons",
         showactive=False,
-        x=0.01, y=1.18,
+        x=0.0, y=1.18,
         direction="left",
         buttons=[
-            dict(label="▶️ Play Waves", method="animate",
+            dict(label="▶️ Play Motion", method="animate",
                  args=[None, dict(frame=dict(duration=35, redraw=False), fromcurrent=True, mode="immediate", loop=True)]),
             dict(label="⏸️ Pause", method="animate",
                  args=[[None], dict(frame=dict(duration=0, redraw=False), mode="immediate")])
@@ -145,7 +187,6 @@ with col_calc_left:
 
     st.caption(f"Equivalent in Radians: **{rad_libre:.4f} rad** ({rad_libre/np.pi:.2f} π)")
 
-    # Cuadrícula de las 6 métricas
     m1, m2, m3 = st.columns(3)
     m1.metric("Cosine (X)", f"{c_val:.4f}")
     m2.metric("Sine (Y)", f"{s_val:.4f}")
@@ -157,19 +198,14 @@ with col_calc_left:
     m6.metric("Cotangent (1/tan)", f"{cot_v:.4f}" if not np.isnan(cot_v) else "∞")
 
 with col_calc_right:
-    theta_c = np.linspace(0, 2 * np.pi, 200)
     fig_circle = go.Figure()
     
-    # Círculo unitario fijo
     fig_circle.add_trace(go.Scatter(x=np.cos(theta_c), y=np.sin(theta_c), mode="lines",
                                     line=dict(color="#8b949e", width=2), name="Unit Circle (R=1)"))
-    # Radio
     fig_circle.add_trace(go.Scatter(x=[0, c_val], y=[0, s_val], mode="lines+markers",
                                     line=dict(color="#f0883e", width=3), marker=dict(size=10), name=f"Radius ({angulo_libre}°)"))
-    # Sombra Coseno
     fig_circle.add_trace(go.Scatter(x=[0, c_val], y=[0, 0], mode="lines",
                                     line=dict(color="#58a6ff", width=4), name="Cosine Shadow (X)"))
-    # Sombra Seno
     fig_circle.add_trace(go.Scatter(x=[c_val, c_val], y=[0, s_val], mode="lines",
                                     line=dict(color="#3fb950", width=4, dash="dot"), name="Sine Shadow (Y)"))
 
@@ -178,3 +214,4 @@ with col_calc_right:
     fig_circle.update_layout(template="plotly_dark", height=360, margin=dict(l=10, r=10, t=10, b=10))
     
     st.plotly_chart(fig_circle, use_container_width=True)
+
